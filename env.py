@@ -134,15 +134,7 @@ class Environment:
             if self.packages[i].start_time == self.t:
                 selected_packages.append(self.packages[i])
                 self.packages[i].status = 'waiting'
-        if len(selected_packages) != 0:
-            print(f"THONG TIN GOI HANG TAI THOI DIEM {self.t}")
-            for package in selected_packages:
-                print((package.package_id, package.start[0] + 1, package.start[1] + 1, 
-                          package.target[0] + 1, package.target[1] + 1, package.start_time, package.deadline))
-            print(f"THONG TIN ROBOT TAI THOI DIEM {self.t}")
-            for robot in self.robots:
-                print((robot.position[0] + 1, robot.position[1] + 1,
-                        robot.carrying))
+
         state = {
             'time_step': self.t,
             'map': self.grid,
@@ -346,4 +338,3 @@ if __name__=="__main__":
         print("Time step:", env.t)
         print("Packages:", state['packages'])
         print("Robots:", state['robots'])
-    

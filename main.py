@@ -1,6 +1,5 @@
 from env import Environment
 from agent import Agents
-
 import numpy as np
 
 if __name__=="__main__":
@@ -28,6 +27,10 @@ if __name__=="__main__":
     while not done:
         actions = agents.get_actions(state)
         next_state, reward, done, infos = env.step(actions)
+        # print("\n")
+        # print("-----------HEHE----------")
+        # for row in next_state['map']:
+        #     print(row)
         state = next_state
 
     print("Episode finished")

@@ -134,15 +134,15 @@ class Environment:
             if self.packages[i].start_time == self.t:
                 selected_packages.append(self.packages[i])
                 self.packages[i].status = 'waiting'
-        if len(selected_packages) != 0:
-            print(f"THONG TIN GOI HANG TAI THOI DIEM {self.t}")
-            for package in selected_packages:
-                print((package.package_id, package.start[0] + 1, package.start[1] + 1, 
-                          package.target[0] + 1, package.target[1] + 1, package.start_time, package.deadline))
-            print(f"THONG TIN ROBOT TAI THOI DIEM {self.t}")
-            for robot in self.robots:
-                print((robot.position[0] + 1, robot.position[1] + 1,
-                        robot.carrying))
+        # if len(selected_packages) != 0:
+        #     print(f"LOG ENV: THONG TIN GOI HANG TAI THOI DIEM {self.t}")
+        #     for package in selected_packages:
+        #         print((package.package_id, package.start[0] + 1, package.start[1] + 1, 
+        #                   package.target[0] + 1, package.target[1] + 1, package.start_time, package.deadline))
+        #     print(f"LOG ENV: THONG TIN ROBOT TAI THOI DIEM {self.t}")
+        #     for robot in self.robots:
+        #         print((robot.position[0] + 1, robot.position[1] + 1,
+        #                 robot.carrying))
         state = {
             'time_step': self.t,
             'map': self.grid,
@@ -216,6 +216,7 @@ class Environment:
             move, pkg_act = actions[i]
             if move in ['L', 'R', 'U', 'D'] and final_positions[i] != robot.position:
                 r += self.move_cost
+                # print("LOG ENV: Da mat phi di chuyen")
             robot.position = final_positions[i]
 
         # -------- Process Package Actions --------
@@ -223,7 +224,7 @@ class Environment:
             move, pkg_act = actions[i]
             # Pick up action.
             if pkg_act == '1':
-                if robot.carrying is None:
+                if robot.carrying == 0:
                     # Check for available packages at the current cell.
                     for i in range(len(self.packages)):
                         if self.packages[i].status == 'waiting' and self.packages[i].start == robot.position and self.packages[i].start_time <= self.t:
@@ -235,7 +236,7 @@ class Environment:
 
             # Drop action.
             elif pkg_act == '2':
-                if robot.carrying is not None:
+                if robot.carrying != 0:
                     package_id = robot.carrying
                     target = self.packages[package_id - 1].target
                     # Check if the robot is at the target position.
@@ -246,9 +247,11 @@ class Environment:
                         # Apply reward based on whether the delivery is on time.
                         if self.t <= pkg.deadline:
                             r += self.delivery_reward
+                            print(f"LOG ENV: da van chuyen xong")
                         else:
                             # Example: a reduced reward for late delivery.
                             r += self.delay_reward
+                            print(f"LOG ENV: da van chuyen xong")
                         robot.carrying = 0  
         
         # Increment the simulation timestep.

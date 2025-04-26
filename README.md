@@ -8,9 +8,9 @@ Baseline 1:
 - Các con robot đụng độ thì cho con robot có index bé nhất đi trước (đã được implement logic trong file `env.py`)
 
 # Các attribute trong class `Agents`
-- `self.map`: là 1 mảng - static, không đổi
-- `self.robot_assignments`: là 1 dictionary, key: idx robot và values: idx gói hàng
-- `self.robot_paths`: là 1 dictionary: key: idx robot - values. Lưu các giá trị theo 0-index based. 
+- `self.robot_assignments`: là 1 dictionary, key: idx robot - values: idx gói hàng
+- `self.robot_paths`: là 1 dictionary, key: idx robot - values: đường đi => đường đi này chỉ thay đổi, được xóa nếu robot đã đi đến cuối đường. 
+- `self.pending_packages`: là 1 dictionary package cần được di chuyển, key: idx package - values: vị trí hiện tại package
 # Ý tưởng code
 ## `class Agents` 
     - self.robot_assignments: key là robot_idx, value là package_idx
@@ -18,7 +18,7 @@ Baseline 1:
     - self.pending_packages: key là package idx, value là vị trí của packages
     - self.time_step
 ## Các hàm utils
-- `def update_pending_packages`: update các package nào đang cần di chuyển
+- `def update_pending_packages`: update các package nào đang cần di chuyển => logic hàm này đang chưa được rõ
 - `def find_path`: tìm đường giữa 2 tuple start - end
 - `def get_move_action`: convert bước đi từ vị trí sang các biến 'S', 'L', 'R', 'U', 'D' => quy định hành động đi của robot
 - `def get_package_action`: lựa chọn hành động đi của robot => logic hàm này đang chưa được rõ

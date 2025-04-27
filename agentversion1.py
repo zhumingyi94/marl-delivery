@@ -16,7 +16,7 @@ def compute_new_position(map, position, move):
         i, j = r, c
     if i <= 1 or i >= len(map) or j <= 1 or j >= len(map[0]):
         return r, c
-    if map[i][j] == 1:
+    if map[i-1][j-1] == 1:
         return r, c
     return i, j
 
@@ -24,7 +24,7 @@ def valid_position(map, position):
     i, j = position
     if i <= 0 or i >= len(map) or j <= 0 or j >= len(map[0]):
         return False
-    if map[i][j] == 1:
+    if map[i-1][j-1] == 1:
         return False
     return True
 
@@ -106,7 +106,7 @@ class AgentsVersion1:
             i, j = r, c
         if i <= 1 or i >= len(self.map) or j <= 1 or j >= len(self.map[0]):
             return r, c
-        if map[i][j] == 1:
+        if map[i-1][j-1] == 1:
             return r, c
         return i, j
 
@@ -197,6 +197,7 @@ class AgentsVersion1:
                     #     package_id = min(package_id, package[0])
 
                 if pos_pack == (1, 1):
+                    actions.append((str('S'), str(0)))
                     continue
 
                 package_id = 10000
@@ -240,10 +241,10 @@ class AgentsVersion1:
                     # print(i, move, actions[i][0], actions[i][1], type( actions[i][0]), type( actions[i][1]))
                     if move != actions[i][0] and int(actions[i][1]) == 0:
                         new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
-                        if new_pos not in old_move:
+                        if new_pos not in old_move and valid_position(map, new_pos):
                             print("new pos", 1, i, new_pos)
                             actions[i] = (move, actions[i][1])
-                            return actions
+                            # return actions
 
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
         occupied = {}
@@ -255,19 +256,19 @@ class AgentsVersion1:
             if actions[i][0] != 'S':
                 occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
         for i in range(len(actions)):
+            pos_robot = (robots[i][0], robots[i][1])
             if actions[i][0] == 'S' and actions[i][1] != '1':
                 for move in ['L', 'R', 'U', 'D']:
-                    print(move)
-                    new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
-                    if new_pos not in occupied:
-                        print("new pos", 2, i, new_pos)
+                    new_pos_robot = self.compute_valid_position(map, pos_robot, move)
+                    # if new_pos not in occupied and valid_position(map, new_pos):
+                    if new_pos_robot not in old_pos and new_pos_robot not in occupied and valid_position(map,
+                                                                                                        new_pos_robot):
                         actions[i] = (move, actions[i][1])
-                        break
+                        occupied[new_pos_robot] = i
 
 
         print("N robots = ", len(self.robots))
         print("Actions = ", actions)
-        print("Transit success", self.transit_succes)
         return actions
 
 if __name__ == "__main__":

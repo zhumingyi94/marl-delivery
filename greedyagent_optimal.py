@@ -138,6 +138,7 @@ class GreedyAgentsOptimal:
             return r, c
         return i, j
 
+
     def valid_position(self, map, position):
         i, j = position
         if i <= 0 or i >= len(self.map) or j <= 0 or j >= len(self.map[0]):

@@ -41,6 +41,7 @@ class Agents_TAD:
         self.in_transit_packages = []
         self.finished = [] # Does the robot still need to transport
         self.pos_stay = {} # Store the position when it is in the 'stay' state
+        self.transit_succes = 0
 
     def init_agents(self, state):
         self.state = state
@@ -179,6 +180,7 @@ class Agents_TAD:
                         else:
                             pkg_act = 2
                             self.in_transit_packages.remove(package)
+                            self.transit_succes += 1
                         break
             else:
                 final_package = (1, 1)
@@ -220,20 +222,27 @@ class Agents_TAD:
 
         # Handle if there is a cycle
         old_move = {}
+        new_move = {}
+        still_move = {}
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             old_move[pos_robot] = i
+            new_move[self.compute_valid_position(map, pos_robot, actions[i][0])] = i
+            if pos_robot != self.compute_valid_position(map, pos_robot, actions[i][0]):
+                still_move[pos_robot] = i
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             next_post = self.compute_valid_position(map, pos_robot, actions[i][0])
-            if next_post in old_move:
+            if pos_robot in new_move and next_post in old_move and pos_robot != next_post:
+                # print(i, True)
                 for move in ['L', 'R', 'U', 'D']:
-                    if move != actions[i][0] and actions[i][1] == 0:
+                    # print(i, move, actions[i][0], actions[i][1], type( actions[i][0]), type( actions[i][1]))
+                    if move != actions[i][0] and int(actions[i][1]) == 0:
                         new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
                         if new_pos not in old_move:
-                            print("new pos", i, new_pos)
+                            print("new pos", 1, i, new_pos)
                             actions[i] = (move, actions[i][1])
-                            return actions
+                            # return actions
 
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
         # occupied = {}
@@ -245,11 +254,12 @@ class Agents_TAD:
         #     if actions[i][0] != 'S':
         #         occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
         # for i in range(len(actions)):
-        #     if actions[i][0] == 'S' and actions[i][1] != 1:
+        #     if actions[i][0] == 'S' and actions[i][1] != '1':
         #         for move in ['L', 'R', 'U', 'D']:
+        #             print(move)
         #             new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
         #             if new_pos not in occupied:
-        #                 print("new pos", i, new_pos)
+        #                 print("new pos", 2, i, new_pos)
         #                 actions[i] = (move, actions[i][1])
         #                 break
 
@@ -257,6 +267,7 @@ class Agents_TAD:
         print("N robots = ", len(self.robots))
         print("Actions = ", actions)
         print(self.robots_target)
+        print("Transit success", self.transit_succes)
         return actions
 
 if __name__ == "__main__":

@@ -39,9 +39,11 @@ class Agents_TAD:
         self.map = []
         self.waiting_packages = []
         self.in_transit_packages = []
+        self.tranfered = []
         self.finished = [] # Does the robot still need to transport
         self.pos_stay = {} # Store the position when it is in the 'stay' state
         self.transit_succes = 0
+        self.packages = []
 
     def init_agents(self, state):
         self.state = state
@@ -151,36 +153,41 @@ class Agents_TAD:
         map = state['map']
         # Add the newly created packages into waiting_packages
         for package in packages:
+            self.packages.append(package)
             self.waiting_packages.append(package)
 
         for i in range(len(robots)):
-            print("robot", i)
             # move = str(np.random.choice(list_actions))
             move = 'S'
             pkg_act = 0
 
             pos_robot_i, pos_robot_j, carrying = state['robots'][i]
             pos_robot = (pos_robot_i, pos_robot_j)
+            print(f"Robot {i} o vi tri {pos_robot}")
 
             if carrying != 0: # If the robot is transporting a package
-                if len(self.in_transit_packages) == 0:
-                    actions.append((str('S'), str(0)))
-                    self.finished[i] = True
-                    self.pos_stay[i] = (robots[i][0], robots[i][1])
-                    continue
-
-                # print("In_transit", self.in_transit_packages, carrying)
-                for package in self.in_transit_packages:
+                # if len(self.in_transit_packages) == 0:
+                #     actions.append((str('S'), str(0)))
+                #     self.finished[i] = True
+                #     self.pos_stay[i] = (robots[i][0], robots[i][1])
+                #     continue
+                print(f"Robot {i} o vi tri {pos_robot} dang cam hang {carrying}")
+                print(1111)
+                print("In_transit", self.in_transit_packages, carrying)
+                for package in self.in_transit_packages.copy():
+                    # print(package[0], carrying)
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
+                        print(f"dia chi goi hang {package[0]} do la", target_package)
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
                         if len(move_path) > 1:
                             pkg_act = 0
                         else:
                             pkg_act = 2
-                            self.in_transit_packages.remove(package)
+                            self.tranfered.append(package)
                             self.transit_succes += 1
+                            self.in_transit_packages.remove(package)
                         break
             else:
                 final_package = (1, 1)
@@ -190,7 +197,7 @@ class Agents_TAD:
                     continue
                 transited_package = self.waiting_packages[0]
                 print("waiting packages", self.waiting_packages)
-                for package in self.waiting_packages:
+                for package in self.waiting_packages.copy():
                     start_package = (package[1], package[2])
                     target_package = (package[3], package[4])
                     if self.differ_connected(pos_robot, start_package):
@@ -199,7 +206,8 @@ class Agents_TAD:
                         continue
                     start_path = self.get_action(pos_robot, start_package)
                     target_path = self.get_action(start_package, target_package)
-                    len_path = len(start_path) + len(target_path)
+                    # len_path = len(start_path) + len(target_path)
+                    len_path = len(start_path)
                     # print(len_path)
                     if len_path < len_min_path:
                         len_min_path = len_path
@@ -207,14 +215,20 @@ class Agents_TAD:
                         transited_package = package
 
                 if not self.differ_connected(pos_robot, final_package):
+                    print(f"Dang tren duong di nhan goi hang {transited_package}")
                     move_path = self.get_action(pos_robot, final_package)
                     move = 'S' if len(move_path) == 0 else move_path[0]
                     if len(move_path) <= 1:
                         pkg_act = 1
+                        print(f"goi hang {transited_package} da duoc nhan")
                         self.in_transit_packages.append(transited_package)
                         self.waiting_packages.remove(transited_package)
+                        print(self.in_transit_packages)
+                        print(self.waiting_packages)
+
                     else:
                         pkg_act = 0
+
             print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
 

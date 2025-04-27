@@ -117,7 +117,7 @@ class Agents_TAD:
             i, j = r + 1, c
         else:
             i, j = r, c
-        if i <= 0 or i >= len(self.map) or j <= 0 or j >= len(self.map[0]):
+        if i <= 1 or i >= len(self.map) or j <= 1 or j >= len(self.map[0]):
             return r, c
         if map[i][j] == 1:
             return r, c
@@ -147,6 +147,7 @@ class Agents_TAD:
         actions = []
         packages = state['packages']
         robots = state['robots']
+        map = state['map']
         # Add the newly created packages into waiting_packages
         for package in packages:
             self.waiting_packages.append(package)
@@ -212,21 +213,47 @@ class Agents_TAD:
                         self.waiting_packages.remove(transited_package)
                     else:
                         pkg_act = 0
+            print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
 
-        occupied = {}
-        map = state['map']
+
+
+        # Handle if there is a cycle
+        old_move = {}
         for i in range(len(actions)):
-            if actions[i][0] != 'S':
-                occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
+            pos_robot = (robots[i][0], robots[i][1])
+            old_move[pos_robot] = i
         for i in range(len(actions)):
-            if actions[i][0] == 'S' and actions[i][1] != 1:
+            pos_robot = (robots[i][0], robots[i][1])
+            next_post = self.compute_valid_position(map, pos_robot, actions[i][0])
+            if next_post in old_move:
                 for move in ['L', 'R', 'U', 'D']:
-                    new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
-                    if new_pos not in occupied:
-                        print("new pos", i, new_pos)
-                        actions[i] = (move, actions[i][1])
-                        break
+                    if move != actions[i][0] and actions[i][1] == 0:
+                        new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
+                        if new_pos not in old_move:
+                            print("new pos", i, new_pos)
+                            actions[i] = (move, actions[i][1])
+                            return actions
+
+        # If a moving robot would collide with a stationary robot, force the stationary robot to move
+        # occupied = {}
+        # old_pos = {}
+        #
+        # for i in range(len(actions)):
+        #     pos_robot = (robots[i][0], robots[i][1])
+        #     old_pos[pos_robot] = i
+        #     if actions[i][0] != 'S':
+        #         occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
+        # for i in range(len(actions)):
+        #     if actions[i][0] == 'S' and actions[i][1] != 1:
+        #         for move in ['L', 'R', 'U', 'D']:
+        #             new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
+        #             if new_pos not in occupied:
+        #                 print("new pos", i, new_pos)
+        #                 actions[i] = (move, actions[i][1])
+        #                 break
+
+
         print("N robots = ", len(self.robots))
         print("Actions = ", actions)
         print(self.robots_target)

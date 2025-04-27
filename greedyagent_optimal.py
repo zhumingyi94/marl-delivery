@@ -1,5 +1,8 @@
 # import numpy as np
 # Run a BFS to find the path from start to goal
+import random
+
+
 def run_bfs(map, start, goal):
     n_rows = len(map)
     n_cols = len(map[0])
@@ -198,6 +201,7 @@ class GreedyAgentsOptimal:
                 else:
                     actions.append(('S', '0'))
 
+        # If a moving robot would collide with a stationary robot, force the stationary robot to move
         robots = state['robots']
         occupied = {}
         for i in range(len(actions)):
@@ -205,10 +209,12 @@ class GreedyAgentsOptimal:
             if actions[i][0] != 'S':
                 occupied[self.compute_valid_position(map, (self.robots[i][0], self.robots[i][1]), actions[i][0])] = i
         for i in range(len(actions)):
-            if actions[i][0] == 'S':
-                for move in ['L', 'R', 'U', 'D']:
+            if actions[i][0] == 'S' and actions[i][1] != 1:
+                moves = ['L', 'R', 'U', 'D']
+                # random.shuffle(moves)
+                for move in moves:
                     new_pos = self.compute_valid_position(map, (self.robots[i][0], self.robots[i][1]), move)
-                    if self.valid_position(self.map, new_pos) and new_pos not in occupied:
+                    if new_pos not in occupied:
                         # print(type(actions[i][0]), type(move))
                         print("new pos", i, new_pos)
                         actions[i] = (move, actions[i][1])

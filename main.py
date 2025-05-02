@@ -1,5 +1,5 @@
 from env import Environment
-# from agent import Agents
+#from agent import Agents
 from greedyagent import GreedyAgents as Agents
 from visualization import animate
 import matplotlib.pyplot as plt
@@ -13,8 +13,10 @@ if __name__=="__main__":
     parser.add_argument("--max_steps", type=int, default=100, help="Maximum number of steps per episode")
     parser.add_argument("--seed", type=int, default=2025, help="Random seed for reproducibility")
     parser.add_argument("--max_time_steps", type=int, default=100, help="Maximum time steps for the environment")
-    parser.add_argument("--map", type=str, default="map.txt", help="Map name")
     parser.add_argument("--interval", type=int, default=200, help="Animation frame interval in ms")
+
+    parser.add_argument("--map", type=str, default="map.txt", help="Map name")
+
     args = parser.parse_args()
     np.random.seed(args.seed)
 
@@ -25,21 +27,20 @@ if __name__=="__main__":
     state = env.reset()
     agents = Agents()
     agents.init_agents(state)
-    print(state)
+    #env.render()
     done = False
     t = 0
     while not done:
         actions = agents.get_actions(state)
         next_state, reward, done, infos = env.step(actions)
         state = next_state
-
+        env.render()
         t += 1
 
     print("Episode finished")
     print("Total reward:", infos['total_reward'])
     print("Total time steps:", infos['total_time_steps'])
-
-    # anim = animate(env, agents, interval=args.interval)
-    # plt.show()
-    # anim.save("run.mp4", fps=3)
-    # sys.exit(0) 
+    anim = animate(env, agents, interval=args.interval)
+    plt.show()
+    anim.save("run.mp4", fps=3)
+    sys.exit(0) 

@@ -33,7 +33,6 @@ def run_bfs(map, start, goal):
         next_pos = (current[0] + dx, current[1] + dy)
         if next_pos in d:
             if d[next_pos] == d[current] - 1:
-                print("LOG d[start]", actions[t], d[next_pos])
                 return actions[t], d[next_pos]
         t += 1
 

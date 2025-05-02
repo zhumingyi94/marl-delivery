@@ -4,7 +4,6 @@ from env import Environment
 from agent_tad import Agents_TAD
 from greedyagent import GreedyAgents
 from greedyagent_optimal import GreedyAgentsOptimal
-# from greedyagent import GreedyAgents as Agents
 from visualization import animate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,8 +30,6 @@ if __name__ == "__main__":
 
     state = env.reset()
     agents = Agents_TAD()
-    # agents = GreedyAgents()
-    # agents = GreedyAgentsOptimal()
     agents.init_agents(state)
     print(state)
     done = False
@@ -50,21 +47,8 @@ if __name__ == "__main__":
         env.render()
         t += 1
 
-        t += 1
-
-        t += 1
-
     print("Episode finished")
     print("Total reward:", infos['total_reward'])
     print("Total time steps:", infos['total_time_steps'])
     print(max_reward)
     print(args)
-    # print(agents.finished)
-    # print("Waiting_packages", agents.waiting_packages)
-    # print("In_transit_packages", agents.in_transit_packages)
-    # print(agents.pos_stay)
-
-    # anim = animate(env, agents, interval=args.interval)
-    # plt.show()
-    # anim.save("run.mp4", fps=3)
-    # sys.exit(0)

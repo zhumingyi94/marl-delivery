@@ -2,10 +2,14 @@ import sys
 
 from env import Environment
 from agent_tad import Agents_TAD
+from agentversion1 import AgentsVersion1
+from agentversion2 import AgentsVersion2
+from agentversion3 import AgentsVersion3
+from agentversion4 import AgentsVersion4
 from greedyagent import GreedyAgents
 from greedyagent_optimal import GreedyAgentsOptimal
 # from greedyagent import GreedyAgents as Agents
-from visualization import animate
+# from visualization import animate
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -13,6 +17,10 @@ import numpy as np
 
 if __name__ == "__main__":
     import argparse
+    import sys
+
+    # Mở file để ghi
+    sys.stdout = open('output.txt', 'w')
 
     parser = argparse.ArgumentParser(description="Multi-Agent Reinforcement Learning for Delivery")
     parser.add_argument("--num_agents", type=int, default=5, help="Number of agents")
@@ -30,10 +38,16 @@ if __name__ == "__main__":
                       seed=args.seed)
 
     state = env.reset()
-    agents = Agents_TAD()
+    # agents = Agents_TAD()
     # agents = GreedyAgents()
+    # agents = AgentsVersion1()
+    # agents = AgentsVersion2()
+    # agents = AgentsVersion3()
+    agents = AgentsVersion4()
     # agents = GreedyAgentsOptimal()
     agents.init_agents(state)
+    # for i in env.packages:
+    #     print(i.package_id)
     print(state)
     done = False
     t = 0
@@ -55,12 +69,13 @@ if __name__ == "__main__":
     print("Total time steps:", infos['total_time_steps'])
     print(max_reward)
     print(args)
-    # print(agents.finished)
-    # print("Waiting_packages", agents.waiting_packages)
-    # print("In_transit_packages", agents.in_transit_packages)
-    # print(agents.pos_stay)
+    # print("Transit success", agents.transit_succes)
+    # print("Waiting_packages", len(agents.waiting_packages), agents.waiting_packages)
+    # print("In_transit_packages", len(agents.in_transit_packages), agents.in_transit_packages)
+    # print("Tranfered", len(agents.transited_packages), agents.transited_packages)
 
-    # anim = animate(env, agents, interval=args.interval)
-    # plt.show()
-    # anim.save("run.mp4", fps=3)
-    # sys.exit(0)
+    count_delivered = sum(1 for pack in env.packages if pack.status == "delivered")
+    print(f"Number package delivered: {count_delivered}")
+    # for pack in env.packages:
+    #     print(pack.status)
+

@@ -1,8 +1,6 @@
 import json
 from collections import deque
-
 import numpy as np
-
 
 def compute_new_position(position, move):
     r, c = position
@@ -20,20 +18,10 @@ def compute_new_position(position, move):
         print("Error move")
         return r, c
 
-# def valid_position()
-
-def conflict_transport(robots, moves):
-    if len(robots) != len(moves):
-        print("Error transport")
-
-
-
-
 class Agents_TAD:
     def __init__(self):
         self.n_robots = 0
         self.state = None
-
         # add feature
         self.board_path = {}
         self.map = []
@@ -54,18 +42,6 @@ class Agents_TAD:
         self.robots = [(robot[0] - 1, robot[1] - 1, 0) for robot in state['robots']]
         self.robots_target = ['free'] * self.n_robots
 
-    def get_path(self, path):
-        list_path = {}
-        with open(path, "r", encoding="utf-8") as f:
-            for line_number, line in enumerate(f, 1):
-                line = line.strip()
-
-                obj = json.loads(line)
-                start = tuple(obj["start"])
-                target = tuple(obj["target"])
-                list_path[(start, target)] = obj["path"]
-        return list_path
-
     def get_shortest_path(self, map):
         list_path = {}
         map_position = []
@@ -75,8 +51,8 @@ class Agents_TAD:
         for i in range(n):
             for j in range(m):
                 if map[i][j] == 0:
-                    map_position.append((i, j))
-
+                    map_position.append((i, j)
+                                        )
         for i in range(len(map_position)):
             dist = [[-1] * m for _ in range(n)]
             str_path = [[""] * m for _ in range(n)]
@@ -89,7 +65,6 @@ class Agents_TAD:
 
             while queue:
                 x, y = queue.popleft()
-
                 for (direc_move, (di, dj)) in directions:
                     pos_i = x + di
                     pos_j = y + dj
@@ -101,12 +76,11 @@ class Agents_TAD:
                         start = (start_i + 1, start_j + 1)
                         target = (pos_i + 1, pos_j + 1)
                         list_path[(start, target)] = str_path[pos_i][pos_j]
+
+        print(list_path)
         return list_path
 
     def compute_valid_position(self, map, position, move):
-        """
-        Computes the intended new position for a robot given its current position and move command.
-        """
         r, c = position
         if move == 'S':
             i, j = r, c
@@ -145,40 +119,26 @@ class Agents_TAD:
         return self.board_path[(start, target)]
 
     def get_actions(self, state):
-        print(state)
         list_actions = ['S', 'L', 'R', 'U', 'D']
         actions = []
         packages = state['packages']
         robots = state['robots']
         map = state['map']
-        # Add the newly created packages into waiting_packages
         for package in packages:
             self.packages.append(package)
             self.waiting_packages.append(package)
 
         for i in range(len(robots)):
-            # move = str(np.random.choice(list_actions))
             move = 'S'
             pkg_act = 0
 
             pos_robot_i, pos_robot_j, carrying = state['robots'][i]
             pos_robot = (pos_robot_i, pos_robot_j)
-            print(f"Robot {i} o vi tri {pos_robot}")
 
-            if carrying != 0: # If the robot is transporting a package
-                # if len(self.in_transit_packages) == 0:
-                #     actions.append((str('S'), str(0)))
-                #     self.finished[i] = True
-                #     self.pos_stay[i] = (robots[i][0], robots[i][1])
-                #     continue
-                print(f"Robot {i} o vi tri {pos_robot} dang cam hang {carrying}")
-                print(1111)
-                print("In_transit", self.in_transit_packages, carrying)
+            if carrying != 0: 
                 for package in self.in_transit_packages.copy():
-                    # print(package[0], carrying)
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
-                        print(f"dia chi goi hang {package[0]} do la", target_package)
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
                         if len(move_path) > 1:
@@ -196,7 +156,6 @@ class Agents_TAD:
                     actions.append((str('S'), str(0)))
                     continue
                 transited_package = self.waiting_packages[0]
-                print("waiting packages", self.waiting_packages)
                 for package in self.waiting_packages.copy():
                     start_package = (package[1], package[2])
                     target_package = (package[3], package[4])
@@ -206,35 +165,24 @@ class Agents_TAD:
                         continue
                     start_path = self.get_action(pos_robot, start_package)
                     target_path = self.get_action(start_package, target_package)
-                    # len_path = len(start_path) + len(target_path)
-                    len_path = len(start_path)
-                    # print(len_path)
+                    len_path = len(start_path) * 5 + len(target_path)
                     if len_path < len_min_path:
                         len_min_path = len_path
                         final_package = start_package
                         transited_package = package
 
                 if not self.differ_connected(pos_robot, final_package):
-                    print(f"Dang tren duong di nhan goi hang {transited_package}")
                     move_path = self.get_action(pos_robot, final_package)
                     move = 'S' if len(move_path) == 0 else move_path[0]
                     if len(move_path) <= 1:
                         pkg_act = 1
-                        print(f"goi hang {transited_package} da duoc nhan")
                         self.in_transit_packages.append(transited_package)
                         self.waiting_packages.remove(transited_package)
-                        print(self.in_transit_packages)
-                        print(self.waiting_packages)
-
                     else:
                         pkg_act = 0
 
-            print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
 
-
-
-        # Handle if there is a cycle
         old_move = {}
         new_move = {}
         still_move = {}
@@ -248,43 +196,12 @@ class Agents_TAD:
             pos_robot = (robots[i][0], robots[i][1])
             next_post = self.compute_valid_position(map, pos_robot, actions[i][0])
             if pos_robot in new_move and next_post in old_move and pos_robot != next_post:
-                # print(i, True)
                 for move in ['L', 'R', 'U', 'D']:
-                    # print(i, move, actions[i][0], actions[i][1], type( actions[i][0]), type( actions[i][1]))
                     if move != actions[i][0] and int(actions[i][1]) == 0:
                         new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
                         if new_pos not in old_move:
-                            print("new pos", 1, i, new_pos)
                             actions[i] = (move, actions[i][1])
-                            # return actions
-
-        # If a moving robot would collide with a stationary robot, force the stationary robot to move
-        # occupied = {}
-        # old_pos = {}
-        #
-        # for i in range(len(actions)):
-        #     pos_robot = (robots[i][0], robots[i][1])
-        #     old_pos[pos_robot] = i
-        #     if actions[i][0] != 'S':
-        #         occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
-        # for i in range(len(actions)):
-        #     if actions[i][0] == 'S' and actions[i][1] != '1':
-        #         for move in ['L', 'R', 'U', 'D']:
-        #             print(move)
-        #             new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
-        #             if new_pos not in occupied:
-        #                 print("new pos", 2, i, new_pos)
-        #                 actions[i] = (move, actions[i][1])
-        #                 break
-
-
-        print("N robots = ", len(self.robots))
-        print("Actions = ", actions)
-        print(self.robots_target)
-        print("Transit success", self.transit_succes)
         return actions
 
 if __name__ == "__main__":
     agent = Agents_TAD()
-    print(len(agent.board_path))
-    # print(agent.board_path)

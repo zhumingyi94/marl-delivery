@@ -1,18 +1,12 @@
-import sys
-
 from env import Environment
-from agent_tad import Agents_TAD
-from greedyagent import GreedyAgents
-from greedyagent_optimal import GreedyAgentsOptimal
-from visualization import animate
-import matplotlib.pyplot as plt
-import numpy as np
+#from agent import Agents
+from agentversion4 import AgentsVersion4 as Agents
+# from greedyagent import GreedyAgents as Agents
 
 import numpy as np
 
-if __name__ == "__main__":
+if __name__=="__main__":
     import argparse
-
     parser = argparse.ArgumentParser(description="Multi-Agent Reinforcement Learning for Delivery")
     parser.add_argument("--num_agents", type=int, default=5, help="Number of agents")
     parser.add_argument("--n_packages", type=int, default=10, help="Number of packages")
@@ -26,23 +20,17 @@ if __name__ == "__main__":
 
     env = Environment(map_file=args.map, max_time_steps=args.max_time_steps,
                       n_robots=args.num_agents, n_packages=args.n_packages,
-                      seed=args.seed)
-
+                      seed = args.seed)
+    
     state = env.reset()
-    agents = Agents_TAD()
+    agents = Agents()
     agents.init_agents(state)
-    print(state)
+    #env.render()
     done = False
     t = 0
-    max_reward = 0
-    sum_reward = 0
     while not done:
-        env.render()
         actions = agents.get_actions(state)
         next_state, reward, done, infos = env.step(actions)
-        print(infos)
-        sum_reward += reward
-        max_reward = max(max_reward, sum_reward)
         state = next_state
         env.render()
         t += 1
@@ -50,5 +38,3 @@ if __name__ == "__main__":
     print("Episode finished")
     print("Total reward:", infos['total_reward'])
     print("Total time steps:", infos['total_time_steps'])
-    print(max_reward)
-    print(args)

@@ -1,6 +1,6 @@
 from collections import deque
 
-def compute_new_position(map, position, move):
+def compute_valid_position(map, position, move):
     r, c = position
     if move == 'S':
         i, j = r, c
@@ -20,6 +20,7 @@ def compute_new_position(map, position, move):
         return r, c
     return i, j
 
+# check xem 1 vị trí có đang rảnh không
 def valid_position(map, position):
     i, j = position
     if i <= 0 or i >= len(map) or j <= 0 or j >= len(map[0]):
@@ -27,7 +28,8 @@ def valid_position(map, position):
     if map[i-1][j-1] == 1:
         return False
     return True
-
+# difference 1: thiếu find_all_cycle
+# tìm đường đi ngắn nhất giữa 2 điểm và lưu lại với key là (start, end) => ví dụ ((1,1),(2,2))
 def get_shortest_path(map):
     list_path = {}
     map_position = []
@@ -82,7 +84,6 @@ class AgentsVersion1:
         self.transited_packages = []
         self.transit_succes = 0
 
-
     def init_agents(self, state):
         self.state = state
         self.n_robots = len(state['robots'])
@@ -90,75 +91,36 @@ class AgentsVersion1:
         self.board_path = get_shortest_path(state['map'])
         self.robots = [(robot[0], robot[1], 0) for robot in state['robots']]
 
-    def compute_valid_position(self, map, position, move):
-        r, c = position
-        if move == 'S':
-            i, j = r, c
-        elif move == 'L':
-            i, j = r, c - 1
-        elif move == 'R':
-            i, j = r, c + 1
-        elif move == 'U':
-            i, j = r - 1, c
-        elif move == 'D':
-            i, j = r + 1, c
-        else:
-            i, j = r, c
-        if i <= 1 or i >= len(self.map) or j <= 1 or j >= len(self.map[0]):
-            return r, c
-        if map[i-1][j-1] == 1:
-            return r, c
-        return i, j
-
-
-    def valid_position(self, map, position):
-        i, j = position
-        if i <= 0 or i >= len(self.map) or j <= 0 or j >= len(self.map[0]):
-            return False
-        if map[i][j] == 1:
-            return False
-        return True
-
     def differ_connected(self, start, target):
         return (start, target) not in self.board_path
 
-
+    # thực chất là get_move
     def get_action(self, start, target):
         if start == target:
             return ""
         return self.board_path[(start, target)]
 
     def get_actions(self, state):
-        print(state)
         actions = []
         packages = state['packages']
         robots = state['robots']
         map = state['map']
 
-        # Add the newly created packages into waiting_packages
         for package in packages:
             self.packages.append(package)
             self.waiting_packages.append(package)
-        for i in range(len(robots)):
-            self.robots[i] = robots[i]
 
         for i in range(len(robots)):
-            # move = str(np.random.choice(list_actions))
             move = 'S'
             pkg_act = 0
-
             pos_robot_i, pos_robot_j, carrying = robots[i]
             pos_robot = (pos_robot_i, pos_robot_j)
-            print(f"Robot {i} dang o vi tri {pos_robot}")
 
-            if carrying != 0: # If the robot is transporting a package
-                print(f"Package set in transit {self.in_transit_packages}")
-                print(f"Robot {i} o vi tri {pos_robot} va dang cam package_id {carrying}")
+            # Nếu đang cầm một cái gì đó, robot đang di chuyển
+            if carrying != 0: 
                 for package in self.in_transit_packages.copy():
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
-                        print(f"Diem tra goi hang {package[0]} la", target_package)
-                        # As only deliverable packages are selected during traversal, paths that do not exist are ignored
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
                         if len(move_path) > 1:
@@ -169,16 +131,14 @@ class AgentsVersion1:
                             self.transit_succes += 1
                             self.in_transit_packages.remove(package)
                         break
-            else: # The robot is on its way to find the package with the shortest delivery pat
-                final_package = (1, 1)
+            
+            # nếu đang không cầm, tìm package gần nhất để cầm 
+            else: 
                 len_min_path = 10000
                 if len(self.waiting_packages) == 0:
                     actions.append((str('S'), str(0)))
                     continue
-                print(f"Package set in waiting {self.waiting_packages}")
-
                 pos_pack = (1, 1)
-
                 for package in self.waiting_packages:
                     start_package = (package[1], package[2])
                     target_package = (package[3], package[4])
@@ -189,12 +149,9 @@ class AgentsVersion1:
                     start_path = self.get_action(pos_robot, start_package)
                     target_path = self.get_action(start_package, target_package)
                     len_path = len(start_path) + len(target_path)
-
                     if len_path < len_min_path:
                         len_min_path = len_path
                         pos_pack = start_package
-                    # elif len_path == len_min_path:
-                    #     package_id = min(package_id, package[0])
 
                 if pos_pack == (1, 1):
                     actions.append((str('S'), str(0)))
@@ -207,7 +164,6 @@ class AgentsVersion1:
 
                 for package in self.waiting_packages.copy():
                     if package[0] == package_id:
-                        print(f"Robot {i} dang tren duong di nhan goi hang {package}")
                         pos_package = (package[1], package[2])
                         move_path = self.get_action(pos_robot, pos_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
@@ -218,59 +174,43 @@ class AgentsVersion1:
                         else:
                             pkg_act = 0
                         break
-
-            print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
 
-        # Handle if there is a cycle
+        for i in range(len(robots)):
+            self.robots[i] = robots[i]
+
+        # difference 2: do not find old cycles
         old_move = {}
         new_move = {}
-        still_move = {}
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             old_move[pos_robot] = i
-            new_move[self.compute_valid_position(map, pos_robot, actions[i][0])] = i
-            if pos_robot != self.compute_valid_position(map, pos_robot, actions[i][0]):
-                still_move[pos_robot] = i
+            new_move[compute_valid_position(map, pos_robot, actions[i][0])] = i
+
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
-            next_post = self.compute_valid_position(map, pos_robot, actions[i][0])
+            next_post = compute_valid_position(map, pos_robot, actions[i][0])
             if pos_robot in new_move and next_post in old_move and pos_robot != next_post:
-                # print(i, True)
                 for move in ['L', 'R', 'U', 'D']:
-                    # print(i, move, actions[i][0], actions[i][1], type( actions[i][0]), type( actions[i][1]))
                     if move != actions[i][0] and int(actions[i][1]) == 0:
-                        new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
+                        new_pos = compute_valid_position(map, (robots[i][0], robots[i][1]), move)
                         if new_pos not in old_move and valid_position(map, new_pos):
-                            print("new pos", 1, i, new_pos)
                             actions[i] = (move, actions[i][1])
-                            # return actions
-
-        # If a moving robot would collide with a stationary robot, force the stationary robot to move
+                            
         occupied = {}
         old_pos = {}
-
+        # difference 6: thêm 1 vòng for nữa không biết để làm gì
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             old_pos[pos_robot] = i
             if actions[i][0] != 'S':
-                occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
+                occupied[compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             if actions[i][0] == 'S' and actions[i][1] != '1':
                 for move in ['L', 'R', 'U', 'D']:
-                    new_pos_robot = self.compute_valid_position(map, pos_robot, move)
-                    # if new_pos not in occupied and valid_position(map, new_pos):
-                    if new_pos_robot not in old_pos and new_pos_robot not in occupied and valid_position(map,
-                                                                                                        new_pos_robot):
+                    new_pos_robot = compute_valid_position(map, pos_robot, move)
+                    if new_pos_robot not in old_pos and new_pos_robot not in occupied and valid_position(map,new_pos_robot):
                         actions[i] = (move, actions[i][1])
                         occupied[new_pos_robot] = i
-
-
-        print("N robots = ", len(self.robots))
-        print("Actions = ", actions)
         return actions
-
-if __name__ == "__main__":
-    agent = AgentsVersion1()
-    print(len(agent.board_path))

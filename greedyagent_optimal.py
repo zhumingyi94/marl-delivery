@@ -1,8 +1,4 @@
-# import numpy as np
-# Run a BFS to find the path from start to goal
 import random
-
-
 def run_bfs(map, start, goal):
     n_rows = len(map)
     n_cols = len(map[0])
@@ -42,7 +38,6 @@ def run_bfs(map, start, goal):
 
 
 class GreedyAgentsOptimal:
-
     def __init__(self):
         self.agents = []
         self.packages = []
@@ -152,7 +147,6 @@ class GreedyAgentsOptimal:
 
     def get_actions(self, state):
         if self.is_init == False:
-            # This mean we have invoke the init agents, use the update_inner_state to update the state
             self.is_init = True
             self.update_inner_state(state)
 
@@ -216,7 +210,7 @@ class GreedyAgentsOptimal:
                     new_pos = self.compute_valid_position(map, (self.robots[i][0], self.robots[i][1]), move)
                     if new_pos not in occupied:
                         # print(type(actions[i][0]), type(move))
-                        print("new pos", i, new_pos)
+                        # print("new pos", i, new_pos)
                         actions[i] = (move, actions[i][1])
                         break
 

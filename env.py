@@ -353,8 +353,8 @@ class Environment:
         for i, robot in enumerate(self.robots):
             r, c = robot.position
             grid_copy[r][c] = 'R%i'%i
-        # for row in grid_copy:
-        #     print('\t'.join(str(cell) for cell in row))
+        for row in grid_copy:
+            print('\t'.join(str(cell) for cell in row))
         
 
 if __name__=="__main__":
@@ -381,7 +381,7 @@ if __name__=="__main__":
         state, reward, done, infos = env.step(actions)
     
         print("\nState after step:")
-        # env.render()
+        env.render()
         print(f"Reward: {reward}, Done: {done}, Infos: {infos}")
         print("Total Reward:", env.total_reward)
         print("Time step:", env.t)
@@ -392,4 +392,3 @@ if __name__=="__main__":
         t += 1
         if t == 100:
             break
-    

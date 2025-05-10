@@ -1,310 +1,170 @@
-import random
-from collections import deque
+# import numpy as np
+# Run a BFS to find the path from start to goal
+def run_bfs(map, start, goal):
+    n_rows = len(map)
+    n_cols = len(map[0])
 
-def compute_valid_position(map, position, move):
-    r, c = position
-    if move == 'S':
-        i, j = r, c
-    elif move == 'L':
-        i, j = r, c - 1
-    elif move == 'R':
-        i, j = r, c + 1
-    elif move == 'U':
-        i, j = r - 1, c
-    elif move == 'D':
-        i, j = r + 1, c
-    else:
-        i, j = r, c
-    if i <= 1 or i >= len(map) or j <= 1 or j >= len(map[0]):
-        return r, c
-    if map[i-1][j-1] == 1:
-        return r, c
-    return i, j
+    queue = []
+    visited = set()
+    queue.append((goal, []))
+    visited.add(goal)
+    d = {}
+    d[goal] = 0
 
-def valid_position(map, position):
-    i, j = position
-    if i <= 0 or i >= len(map) or j <= 0 or j >= len(map[0]):
-        return False
-    if map[i-1][j-1] == 1:
-        return False
-    return True
+    while queue:
+        current, path = queue.pop(0)
 
-def find_all_cycle(map, robots, actions):
-    visited = {}
-    pos = {}
-    future_pos = {}
-    for i in range(len(robots)):
-        pos_robot = (robots[i][0], robots[i][1])
-        pos[i] = pos_robot
-        visited[pos_robot] = False
-        next_post = compute_valid_position(map, pos_robot, actions[i][0])
-        future_pos[pos_robot] = next_post
-    list_cycles = []
-    list_actions = []
-    for i in range(len(robots)):
-        queue = deque()
-        if not visited[pos[i]]:
-            queue.append(pos[i])
-            visited[pos[i]] = True
-        start_pos = None
-        history = []
-        history.append(pos[i])
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            next_pos = (current[0] + dx, current[1] + dy)
+            if next_pos[0] < 0 or next_pos[0] >= n_rows or next_pos[1] < 0 or next_pos[1] >= n_cols:
+                continue
+            if next_pos not in visited and map[next_pos[0]][next_pos[1]] == 0:
+                visited.add(next_pos)
+                d[next_pos] = d[current] + 1
+                queue.append((next_pos, path + [next_pos]))
 
-        while queue:
-            start = queue.popleft()
-            target = future_pos[start]
-            if target not in visited:
-                break
+    if start not in d:
+        return 'S', 100000
+    
+    t = 0
+    actions = ['U', 'D', 'L', 'R']
+    current = start
+    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        next_pos = (current[0] + dx, current[1] + dy)
+        if next_pos in d:
+            if d[next_pos] == d[current] - 1:
+                return actions[t], d[next_pos]
+        t += 1
+    return 'S', d[start]
 
-            if not visited[target]:
-                queue.append(target)
-                visited[target] = True
-                history.append(target)
-            else:
-                if target in history:
-                    start_pos = target
-                break
+class GreedyAgents:
 
-        cycle = []
-        action =[]
-        while start_pos:
-            if start_pos in cycle:
-                break
-            for i in range(len(robots)):
-                if start_pos == (robots[i][0], robots[i][1]):
-                    action.append(actions[i])
-                    break
-            cycle.append(start_pos)
-            start_pos = future_pos[start_pos]
-
-        if len(cycle) > 0:
-            list_cycles.append(cycle)
-            list_actions.append(action)
-    return list_cycles, list_actions
-
-def get_shortest_path(map):
-    list_path = {}
-    map_position = []
-    n, m = len(map), len(map[0])
-    directions = [("U", (-1, 0)), ("L", (0, -1)), ("R", (0, 1)), ("D", (1, 0))]
-    for i in range(n):
-        for j in range(m):
-            if map[i][j] == 0:
-                map_position.append((i, j))
-
-    for i in range(len(map_position)):
-        dist = [[-1] * m for _ in range(n)]
-        str_path = [[""] * m for _ in range(n)]
-        queue = deque()
-
-        start_i, start_j = map_position[i]
-        queue.append((start_i, start_j))
-        dist[start_i][start_j] = 0
-        str_path[start_i][start_j] = ""
-
-        while queue:
-            x, y = queue.popleft()
-
-            for (direc_move, (di, dj)) in directions:
-                pos_i = x + di
-                pos_j = y + dj
-                if 0 < pos_i < n and 0 < pos_j < m and dist[pos_i][pos_j] == -1:
-                    if map[pos_i][pos_j] == 0:
-                        dist[pos_i][pos_j] = dist[x][y] + 1
-                        str_path[pos_i][pos_j] = str_path[x][y] + direc_move
-                        queue.append((pos_i, pos_j))
-
-                        start = (start_i + 1, start_j + 1)
-                        target = (pos_i + 1, pos_j + 1)
-                        list_path[(start, target)] = str_path[pos_i][pos_j]
-    return list_path
-
-class AgentsVersion4:
     def __init__(self):
+        self.agents = []
+        self.packages = []
+        self.packages_free = []
         self.n_robots = 0
         self.state = None
 
-        # add feature
-        self.robots = []
-        self.packages = []
-        self.board_path = {}
-        self.map = []
-        self.reserved_map = []
-
-        self.waiting_packages = []
-        self.in_transit_packages = []
-        self.transited_packages = []
-        self.target_packages = {}
+        self.is_init = False
 
     def init_agents(self, state):
         self.state = state
         self.n_robots = len(state['robots'])
         self.map = state['map']
-        self.board_path = get_shortest_path(state['map'])
-        self.robots = [(robot[0], robot[1], 0) for robot in state['robots']]
+        self.robots = [(robot[0]-1, robot[1]-1, 0) for robot in state['robots']]
+        self.robots_target = ['free'] * self.n_robots
+        self.packages += [(p[0], p[1]-1, p[2]-1, p[3]-1, p[4]-1, p[5]) for p in state['packages']]
 
-    def differ_connected(self, start, target):
-        return (start, target) not in self.board_path
+        self.packages_free = [True] * len(self.packages)
 
-    def get_action(self, start, target):
-        if start == target:
-            return ""
-        return self.board_path[(start, target)]
+    def update_move_to_target(self, robot_id, target_package_id, phase='start'):
+
+        if phase == 'start':
+            distance = abs(self.packages[target_package_id][1]-self.robots[robot_id][0]) + \
+            abs(self.packages[target_package_id][2]-self.robots[robot_id][1])
+        else:
+            # Switch to the distance to target (3, 4) if phase == 'target'
+            distance = abs(self.packages[target_package_id][3]-self.robots[robot_id][0]) + \
+            abs(self.packages[target_package_id][4]-self.robots[robot_id][1])
+        i = robot_id
+        #print(self.robots[i], distance, phase)
+
+        # Step 4: Move to the package
+        pkg_act = 0
+        move = 'S'
+        if distance >= 1:
+            pkg = self.packages[target_package_id]
+            
+            target_p = (pkg[1], pkg[2])
+            if phase == 'target':
+                target_p = (pkg[3], pkg[4])
+            move, distance = run_bfs(self.map, (self.robots[i][0], self.robots[i][1]), target_p)
+
+            if distance == 0:
+                if phase == 'start':
+                    pkg_act = 1 # Pickup
+                else:
+                    pkg_act = 2 # Drop
+        else:
+            move = 'S'
+            pkg_act = 1    
+            if phase == 'start':
+                pkg_act = 1 # Pickup
+            else:
+                pkg_act = 2 # Drop    
+
+        return move, str(pkg_act)
+    
+    def update_inner_state(self, state):
+        # Update robot positions and states
+        for i in range(len(state['robots'])):
+            prev = (self.robots[i][0], self.robots[i][1], self.robots[i][2])
+            robot = state['robots'][i]
+            self.robots[i] = (robot[0]-1, robot[1]-1, robot[2])
+            # print(i, self.robots[i])
+            if prev[2] != 0:
+                if self.robots[i][2] == 0:
+                    # Robot has dropped the package
+                    self.robots_target[i] = 'free'
+                else:
+                    self.robots_target[i] = self.robots[i][2]
+        
+        # Update package positions and states
+        self.packages += [(p[0], p[1]-1, p[2]-1, p[3]-1, p[4]-1, p[5]) for p in state['packages']]
+        self.packages_free += [True] * len(state['packages'])    
 
     def get_actions(self, state):
+        if self.is_init == False:
+            # This mean we have invoke the init agents, use the update_inner_state to update the state
+            self.is_init = True
+            self.update_inner_state(state)
+
+        else:
+            self.update_inner_state(state)
+
         actions = []
-        packages = state['packages']
-        robots = state['robots']
-        map = state['map']
-
-        for package in packages:
-            self.packages.append(package)
-            self.waiting_packages.append(package)
-
-        for i in range(len(robots)):
-            move = 'S'
-            pkg_act = 0
-            
-            last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
-            pos_robot_i, pos_robot_j, carrying = robots[i]
-            pos_robot = (pos_robot_i, pos_robot_j)
-            if carrying != 0: 
-                # khó hiểu 1: carrying khác gì last_carrying
-                if last_carrying == 0:
-                    for package in self.waiting_packages.copy():
-                        if package[0] == carrying:
-                            self.in_transit_packages.append(package)
-                            self.waiting_packages.remove(package)
-                            # self.target_packages.remove(package_id)
-                            if package[0] in self.target_packages:
-                                del self.target_packages[package[0]]
-                            break
+        print("State robot: ", self.robots)
+        # Start assigning a greedy strategy
+        for i in range(self.n_robots):
+            # Step 1: Check if the robot is already assigned to a package
+            if self.robots_target[i] != 'free':
                 
-                for package in self.in_transit_packages:
-                    if package[0] == carrying:
-                        target_package = (package[3], package[4])
-                        move_path = self.get_action(pos_robot, target_package)
-                        move = 'S' if len(move_path) == 0 else move_path[0]
-                        pkg_act = 2 if len(move_path) <= 1 else 0
-                        break
-
+                closest_package_id = self.robots_target[i]
+                # Step 1b: Check if the robot has reached the package
+                if self.robots[i][2] != 0:
+                    # Move to the target points
+                    
+                    move, action = self.update_move_to_target(i, closest_package_id-1, 'target')
+                    actions.append((move, str(action)))
+                else:  
+                    # Step 1c: Continue to move to the package
+                    move, action = self.update_move_to_target(i, closest_package_id-1)    
+                    actions.append((move, str(action)))
             else:
-                if last_carrying != 0:
-                    for package in self.in_transit_packages.copy():
-                        if package[0] == last_carrying:
-                            self.transited_packages.append(package)
-                            self.in_transit_packages.remove(package)
-                            break
-
-                len_min_path = 10000
-                if len(self.waiting_packages) == 0:
-                    actions.append((str('S'), str(0)))
-                    continue
-                
-                chosen_package_id = None
-                chosen_pos_pack = (1, 1)
-
-                for package in self.waiting_packages:
-                    # if package[0] not in self.target_packages:
-                    pkg_id = package[0]
-                    if pkg_id in self.target_packages and self.target_packages[pkg_id] != i:
+                # Step 2: Find a package to pick up
+                # Find the closest package
+                closest_package_id = None
+                closed_distance = 1000000
+                for j in range(len(self.packages)):
+                    if not self.packages_free[j]:
                         continue
-                    start_package = (package[1], package[2])
-                    target_package = (package[3], package[4])
-                    if self.differ_connected(pos_robot, start_package):
-                        continue
-                    if self.differ_connected(start_package, target_package):
-                        continue
-                    start_path = self.get_action(pos_robot, start_package)
-                    target_path = self.get_action(start_package, target_package)
-                    len_path = len(start_path) + len(target_path)
-                    if len_path <= len_min_path:
-                        len_min_path = len_path
-                        chosen_package_id = pkg_id
-                        chosen_pos_pack = start_package
 
-                if chosen_pos_pack == (1, 1):
-                    actions.append((str('S'), str(0)))
-                    continue
-                
-                package_id = 10000
-                for package in self.waiting_packages.copy():
-                    if chosen_pos_pack == (package[1], package[2]):
-                        chosen_package_id = min(package_id, package[0])
-                # print(f"{package_id} dang duoc ngam toi")
-                # self.target_packages.append(package_id)
+                    pkg = self.packages[j]                
+                    d = abs(pkg[1]-self.robots[i][0]) + abs(pkg[2]-self.robots[i][1])
+                    if d < closed_distance:
+                        closed_distance = d
+                        closest_package_id = pkg[0]
 
-                if chosen_package_id is not None:
-                    self.target_packages[chosen_package_id] = i
-                    for pkg_id, robot_id in list(self.target_packages.items()):
-                        if robot_id == i and pkg_id != chosen_package_id:
-                            del self.target_packages[pkg_id]
+                if closest_package_id is not None:
+                    self.packages_free[closest_package_id-1] = False
+                    self.robots_target[i] = closest_package_id
+                    move, action = self.update_move_to_target(i, closest_package_id-1)    
+                    actions.append((move, str(action)))
+                else:
+                    actions.append(('S', '0'))
 
-                move_path = self.get_action(pos_robot, chosen_pos_pack)
-                move = 'S' if not move_path else move_path[0]
-                # If next step picks the package
-                if len(move_path) <= 1:
-                    pkg_act = 1  # pickup
-                else: 
-                    pkg_act = 0
-
-                # for package in self.waiting_packages:
-                #     if package[0] == package_id:
-                #         pos_package = (package[1], package[2])
-                #         move_path = self.get_action(pos_robot, pos_package)
-                #         move = 'S' if len(move_path) == 0 else move_path[0]
-                #         if len(move_path) <= 1:
-                #             pkg_act = 1
-                #             # self.target_packages.remove(package_id)
-                #         else:
-                #             pkg_act = 0
-                #         break
-
-            actions.append((str(move), str(pkg_act)))
-        for i in range(len(robots)):
-            self.robots[i] = robots[i]
-
-        cycles_list, actions_list = find_all_cycle(map, robots, actions)
-        old_pos = {}
-        new_pos = {}
-        for i in range(len(actions)):
-            pos_robot = (robots[i][0], robots[i][1])
-            old_pos[pos_robot] = i
-            new_pos[compute_valid_position(map, pos_robot, actions[i][0])] = i
-
-        for (element_robot, element_action) in zip(cycles_list, actions_list):
-            for i in range(len(element_action)):
-                pos_robot = (element_robot[i][0], element_robot[i][1])
-                next_pos = compute_valid_position(map, pos_robot, element_action[i][0])
-                if pos_robot in new_pos and next_pos in old_pos and pos_robot != next_pos:
-                    moves = ['L', 'R', 'U', 'D']
-                    moves.remove(element_action[i][0])
-                    random.shuffle(moves)
-                    max_len = 100000
-                    # tmp_move = moves[0]
-                    for move in moves:
-                        new_pos_robot = compute_valid_position(map, pos_robot, move)
-                        # tmp_len = self.board_path[(new_pos_robot, )]
-                        if new_pos_robot not in old_pos and new_pos_robot not in new_pos and valid_position(map, new_pos_robot):
-                            # print("new pos", 1, i, pos_robot, new_pos_robot)
-                            new_pos[new_pos_robot] = i
-                            element_action[i] = (move, element_action[i][1])
-                            break # thêm dòng này là được mà đko?
-                for j in range(len(robots)):
-                    if pos_robot == (robots[j][0], robots[j][1]):
-                        actions[j] = element_action[i]
-
-        for i in range(len(actions)):
-            pos_robot = (robots[i][0], robots[i][1])
-            if actions[i][0] == 'S' and actions[i][1] != '1':
-                moves = ['L', 'R', 'U', 'D']
-                random.shuffle(moves)
-                for move in moves:
-                    new_pos_robot = compute_valid_position(map, pos_robot, move)
-                    if new_pos_robot not in old_pos and new_pos_robot not in new_pos and pos_robot in new_pos and valid_position(map, new_pos_robot):
-                        actions[i] = (move, actions[i][1])
-                        new_pos[new_pos_robot] = i
+        print("N robots = ", len(self.robots))
+        print("Actions = ", actions)
+        print(self.robots_target)
         return actions
-
-if __name__ == "__main__":
-    agent = AgentsVersion4()

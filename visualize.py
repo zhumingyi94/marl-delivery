@@ -365,7 +365,7 @@ class DeliveryVisualizer:
 # Helper function to run the visualization
 def visualize_delivery(map_file='map5.txt', num_agents=5, n_packages=10, max_steps=100, seed=2025):
     from env import Environment
-    from agentversion4 import AgentsVersion4 as Agents
+    from agentversion5 import AgentsVersion5 as Agents
     
     env = Environment(map_file=map_file, max_time_steps=max_steps,
                       n_robots=num_agents, n_packages=n_packages,

@@ -3,6 +3,7 @@ from collections import deque
 import numpy as np
 random.seed(2025)
 np.random.seed(2025)
+
 def compute_valid_position(map, position, move):
     r, c = position
     if move == 'S':
@@ -139,6 +140,8 @@ class AgentsVersion4:
         self.transited_packages = []
         self.transit_succes = 0
 
+    def optimal_assgin(self, robots, waiting_packages):
+        return []
 
     def init_agents(self, state):
         self.state = state

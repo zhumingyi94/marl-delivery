@@ -1,5 +1,4 @@
 from env import Environment
-#from agent import Agents
 from agentversion4 import AgentsVersion4 as Agents
 # from greedyagent import GreedyAgents as Agents
 
@@ -11,9 +10,9 @@ if __name__=="__main__":
     parser.add_argument("--num_agents", type=int, default=5, help="Number of agents")
     parser.add_argument("--n_packages", type=int, default=10, help="Number of packages")
     parser.add_argument("--max_steps", type=int, default=100, help="Maximum number of steps per episode")
-    parser.add_argument("--seed", type=int, default=10, help="Random seed for reproducibility")
-    parser.add_argument("--max_time_steps", type=int, default=100, help="Maximum time steps for the environment")
-    parser.add_argument("--map", type=str, default="map5.txt", help="Map name")
+    parser.add_argument("--seed", type=int, default=2025, help="Random seed for reproducibility")
+    parser.add_argument("--max_time_steps", type=int, default=1000, help="Maximum time steps for the environment")
+    parser.add_argument("--map", type=str, default="map.txt", help="Map name")
 
     args = parser.parse_args()
     np.random.seed(args.seed)
@@ -25,6 +24,7 @@ if __name__=="__main__":
     state = env.reset()
     agents = Agents()
     agents.init_agents(state)
+    print(state)
     #env.render()
     done = False
     t = 0

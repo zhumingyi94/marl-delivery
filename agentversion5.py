@@ -170,7 +170,7 @@ class AgentsVersion5:
         self.count_repeat = [] # Lưu số lần vị trí đã được lặp lại
         self.last_move = [] # Lưu move của step trước
 
-        self.NUM_REPEAT = 10
+        self.NUM_REPEAT = 2 # Số lần vị trí lặp lại cần để thực hiện random
 
     # Khởi tạo thông tin dựa trên state được khởi tạo ban đầu
     def init_agents(self, state):
@@ -212,25 +212,16 @@ class AgentsVersion5:
 
         # Duyệt qua từng robot
         for i in range(len(robots)):
+            # Nếu vị trí lặp lại quá nhiều lần thì sẽ xử lý bằng cách random hướng để thoát khỏi thế đứng im đó
             if (robots[i][0], robots[i][1]) == (self.robots[i][0], self.robots[i][1]):
                 self.count_repeat[i] += 1
             else:
                 self.count_repeat[i] = 1
-            if self.count_repeat[i] >= self.NUM_REPEAT and self.last_move[i][0] != 'S':
-                pos_robot = (robots[i][0], robots[i][1])
+            if self.count_repeat[i] >= self.NUM_REPEAT and self.last_move[i][0] != 'S' and self.last_move[i][1] != '1':
                 moves = ['L', 'R', 'U', 'D']
                 moves.remove(self.last_move[i][0])
                 move_action = random.choice(moves)
                 actions.append((str(move_action), str(0)))
-                # for move in moves:
-                #     new_pos_robot = compute_valid_position(map, pos_robot, move)
-                #     x, y = new_pos_robot
-                #     # print(x, y, map[x][y], valid_position(map, new_pos_robot), move)
-                #     if new_pos_robot != pos_robot:
-                #         # print(f"Robot {i} stay at {pos_robot} in  {self.count_repeat[i]}")
-                #         actions.append((str(move), str(0)))
-                #         break
-
                 continue
 
             last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
@@ -306,6 +297,8 @@ class AgentsVersion5:
                         target_path = self.get_action(start_package, target_package)
                         len_path = alpha * len(start_path) + beta * len(target_path)
 
+                        if state['time_step'] + len_path > package[6]:
+                            continue
                         if len_path < len_min_path:
                             len_min_path = len_path
                             package_id = package[0]
@@ -388,7 +381,7 @@ class AgentsVersion5:
         # Xử lý những robot có thể gây chắn đường khi ở trạng thái
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
-            if actions[i][0] == 'S':
+            if actions[i][0] == 'S' and actions[i][1] != '1':
                 if len(new_pos[pos_robot]) > 1: # Có robot khác muốn đi tới vị trí này
                     moves = ['L', 'R', 'U', 'D']
                     # random.shuffle(moves)

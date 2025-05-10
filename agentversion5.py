@@ -172,56 +172,51 @@ class AgentsVersion5:
             return r, c
         return i, j
 
-    def optimal_assign(self, robot_pos, package_id_lists):
-        '''
-        Input:
-            Robot_pos: list các tuple có dạng (robot_id, robot_row, robot_col)
-            Package_id_pos: list các tuple có dạng (pkg_id, pkg_row_start, pkg_col_start, pkg_row_end, pkg_col_end,
-                                                    pkg_start, pkg_deadline)
-        Output: 
-            assign: dictionary với key: robot_id, value: pkg_id => assign[robot_id] = pkg_id
-        '''
+    def optimal_assign(self, robot_pos, package_lists):
         G = nx.DiGraph()
         G.add_node('s'); G.add_node('t')
-        print(f"Hien tai co {len(robot_pos)} robot")
-        print(f"Hien tai co {len(package_id_lists)} pkg")
-        # Cung s->robot
+
+        # 1) s → robot
         for r in robot_pos:
-            G.add_edge('s', str(r[0]), capacity=1, weight=0)
+            rid = r[0]
+            G.add_edge('s', f"r{rid}", capacity=1, weight=0)
+
+        # 2) robot → package
         for r in robot_pos:
-            for p in package_id_lists:
-                # pos_robot = (r[1] - 1, r[2] - 1)
-                # start_package = (p[1] - 1, p[2] - 1)
-                # target_package = (p[3] - 1, p[4] - 1)
+            rid = r[0]
+            for p in package_lists:
+                pid = p[0]
                 pos_robot = (r[1], r[2])
-                start_package = (p[1], p[2])
-                target_package = (p[3], p[4])
-                if pos_robot == start_package:
-                    weight_assigned = 0
+                start_pkg = (p[1], p[2])
+                if pos_robot == start_pkg:
+                    w = 0
                 else:
-                    weight_assigned = len(self.board_path[(pos_robot, start_package)])
-                # if self.differ_connected(pos_robot, start_package):
-                #     continue
-                # if self.differ_connected(start_package, target_package):
-                #     continue
-                G.add_edge(str(r[0]), str(p[0]), capacity=1, 
-                            weight=weight_assigned)
-        for p in package_id_lists:
-            G.add_edge(str(p[0]), 't', capacity=1, weight=0)
+                    w = len(self.board_path[(pos_robot, start_pkg)])
+                G.add_edge(f"r{rid}", f"p{pid}", capacity=1, weight=w)
+
+        # 3) package → t
+        for p in package_lists:
+            pid = p[0]
+            G.add_edge(f"p{pid}", 't', capacity=1, weight=0)
+
         flow_dict = nx.max_flow_min_cost(G, 's', 't')
-        total_cost = nx.cost_of_flow(G, flow_dict)  # Tính tổng chi phí
 
+        # debug: now in G[u] robot u=rX sẽ không chứa 't'
+        for r in robot_pos:
+            u = f"r{r[0]}"
+            nbrs = [v for v in G[u] if v != 's']
+
+        # extract assignment
         assignment = {}
-        for node, flows in flow_dict.items():
-            if node != 's' and node != 't' and node in [str(r[0]) for r in robot_pos]: 
-                robot_id = int(node)
-
-                for pkg_node, flow in flows.items():
-                    if pkg_node != 't' and flow > 0:
-                        package_id = int(pkg_node)
-                        assignment[robot_id] = package_id
-        print(f"Gan nhu sau {assignment}")
-        return assignment, total_cost
+        for u, flows in flow_dict.items():
+            if not u.startswith('r'): continue
+            rid = int(u[1:])
+            for v, f in flows.items():
+                if f>0 and v.startswith('p'):
+                    pid = int(v[1:])
+                    assignment[rid] = pid
+        print(assignment)
+        return assignment
 
     def valid_position(self, map, position):
         i, j = position
@@ -267,7 +262,7 @@ class AgentsVersion5:
             pkg_info = pkg 
             pkg_unassigned.append(pkg_info)
 
-        assign_tmp, total_cost = self.optimal_assign(robot_unassigned, pkg_unassigned)
+        assign_tmp = self.optimal_assign(robot_unassigned, pkg_unassigned)
         for robot_id, pkg_id in assign_tmp.items():
             self.target_packages[robot_id] = pkg_id
         # END THÊMMMMMMMMMMMMMMMMMMMMM       
@@ -306,8 +301,9 @@ class AgentsVersion5:
                             self.transit_succes += 1
                             self.in_transit_packages.remove(package)
                             break
-                print(self.target_packages.keys())
-                print(f"Hien dang co {len(self.waiting_packages)}")
+                # print(self.target_packages.keys())
+                # print(f"Hien dang co {len(self.waiting_packages)}")
+                print(self.target_packages)
                 chosen_package_id = self.target_packages[i]                
                 
                 for package in self.waiting_packages:
@@ -379,4 +375,3 @@ class AgentsVersion5:
 
 if __name__ == "__main__":
     agent = AgentsVersion5()
-    print(len(agent.board_path))

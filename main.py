@@ -24,7 +24,6 @@ if __name__=="__main__":
     state = env.reset()
     agents = Agents()
     agents.init_agents(state)
-    print(state)
     #env.render()
     done = False
     t = 0

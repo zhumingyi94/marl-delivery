@@ -137,6 +137,11 @@ class AgentsVersion5:
         self.in_transit_packages = []
         self.transited_packages = []
         self.target_packages = {}
+        '''
+            lưu trữ danh sách và cách gán cho robot:
+            - key: robot_id
+            - values: package_id => list package chuẩn bị gán cho robot
+        '''
         self.transit_succes = 0
 
 
@@ -171,19 +176,31 @@ class AgentsVersion5:
         '''
         Input:
             Robot_pos: list các tuple có dạng (robot_id, robot_row, robot_col)
-            Package_id_pos: list các tuple có dạng (pkg_id, pkg_row, pkg_col, pkg_start, pkg_deadline)
+            Package_id_pos: list các tuple có dạng (pkg_id, pkg_row_start, pkg_col_start, pkg_row_end, pkg_col_end,
+                                                    pkg_start, pkg_deadline)
         Output: 
             assign: dictionary với key: robot_id, value: pkg_id => assign[robot_id] = pkg_id
         '''
         G = nx.DiGraph()
         G.add_node('s'); G.add_node('t')
+        print(f"Hien tai co {len(robot_pos)} robot")
+        print(f"Hien tai co {len(package_id_lists)} pkg")
         # Cung s->robot
         for r in robot_pos:
             G.add_edge('s', str(r[0]), capacity=1, weight=0)
         for r in robot_pos:
             for p in package_id_lists:
+                pos_robot = (r[1] - 1, r[2] - 1)
+                start_package = (p[1] - 1, p[2] - 1)
+                target_package = (p[3] - 1, p[4] - 1)
+                print(self.board_path.keys())
+                weight_assigned = len(self.board_path[(pos_robot, start_package)])
+                if self.differ_connected(pos_robot, start_package):
+                    continue
+                if self.differ_connected(start_package, target_package):
+                    continue
                 G.add_edge(str(r[0]), str(p[0]), capacity=1, 
-                            weight=len(self.board_path[((r[1], r[2]), (p[1], p[2]))]))
+                            weight=weight_assigned)
         for p in package_id_lists:
             G.add_edge(str(p[0]), 't', capacity=1, weight=0)
         flow_dict = nx.max_flow_min_cost(G, 's', 't')
@@ -194,10 +211,11 @@ class AgentsVersion5:
             if node != 's' and node != 't' and node in [str(r[0]) for r in robot_pos]: 
                 robot_id = int(node)
 
-                for pkg_node, flow in flows.item():
+                for pkg_node, flow in flows.items():
                     if pkg_node != 't' and flow > 0:
                         package_id = int(pkg_node)
                         assignment[robot_id] = package_id
+        print(f"Gan nhu sau {assignment}")
         return assignment, total_cost
 
     def valid_position(self, map, position):
@@ -223,23 +241,39 @@ class AgentsVersion5:
         robots = state['robots']
         map = state['map']
 
-        packages_owned = []
-
         # Add the newly created packages into waiting_packages
         for package in packages:
             self.packages.append(package)
             self.waiting_packages.append(package)
 
+
+        # THÊMMMMMMMMMMMMMMMMMM
+        robot_unassigned = []
+        pkg_unassigned = []
         for i in range(len(robots)):
-            # move = str(np.random.choice(list_actions))
+            if i in self.target_packages.keys() or robots[i][2] != 0:
+                continue
+            robot_info = (i, robots[i][0], robots[i][1])
+            robot_unassigned.append(robot_info)
+
+        for pkg in self.waiting_packages: 
+            if pkg[0] in self.target_packages.values():
+                continue
+            pkg_info = pkg 
+            pkg_unassigned.append(pkg_info)
+
+        assign_tmp, total_cost = self.optimal_assign(robot_unassigned, pkg_unassigned)
+        for robot_id, pkg_id in assign_tmp.items():
+            self.target_packages[robot_id] = pkg_id
+        # END THÊMMMMMMMMMMMMMMMMMMMMM       
+
+        for i in range(len(robots)):
             move = 'S'
             pkg_act = 0
-
             last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
 
             pos_robot_i, pos_robot_j, carrying = robots[i]
             pos_robot = (pos_robot_i, pos_robot_j)
-            # print(f"Robot {i} dang o vi tri {pos_robot}")
 
             if carrying != 0: # If the robot is transporting a package
                 if last_carrying == 0:
@@ -247,23 +281,19 @@ class AgentsVersion5:
                         if package[0] == carrying:
                             self.in_transit_packages.append(package)
                             self.waiting_packages.remove(package)
-                            if package[0] in self.target_packages.keys():
-                                del self.target_packages[package[0]]
+                            if i in self.target_packages.keys():
+                                del self.target_packages[i]
                             break
 
-                # print(f"Package set in transit {self.in_transit_packages}")
-                # print(f"Robot {i} o vi tri {pos_robot} va dang cam package_id {carrying}")
                 for package in self.in_transit_packages:
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
-                        # print(f"Diem tra goi hang {package[0]} la", target_package)
-                        # As only deliverable packages are selected during traversal, paths that do not exist are ignored
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
                         pkg_act = 2 if len(move_path) <= 1 else 0
                         break
 
-            else: # The robot is on its way to find the package with the shortest delivery pat
+            else:
                 if last_carrying != 0:
                     for package in self.in_transit_packages.copy():
                         if package[0] == last_carrying:
@@ -271,61 +301,12 @@ class AgentsVersion5:
                             self.transit_succes += 1
                             self.in_transit_packages.remove(package)
                             break
-
-                len_min_path = 10000
-                if len(self.waiting_packages) == 0:
-                    actions.append((str('S'), str(0)))
-                    continue
-                # print(f"Package set in waiting {self.waiting_packages}")
-
-                chosen_package_id = None
-                chosen_pos_pack = (-1, -1)
-
-                for package in self.waiting_packages:
-                    if package[0] not in self.target_packages.keys():
-                        start_package = (package[1], package[2])
-                        target_package = (package[3], package[4])
-                        if self.differ_connected(pos_robot, start_package):
-                            continue
-                        if self.differ_connected(start_package, target_package):
-                            continue
-                        start_path = self.get_action(pos_robot, start_package)
-                        target_path = self.get_action(start_package, target_package)
-                        len_path = (1 * len(start_path) + 1 * len(target_path))
-
-                        if len_path <= len_min_path:
-                            len_min_path = len_path
-                            chosen_package_id = package[0]
-                            chosen_pos_pack = start_package
-                    # elif len_path == len_min_path:
-                    #     package_id = min(package_id, package[0])
-
-                if chosen_pos_pack == (-1, -1):
-                    actions.append((str('S'), str(0)))
-                    continue
-
-                package_id = 10000
-                for package in self.waiting_packages.copy():
-                    if chosen_pos_pack == (package[1], package[2]):
-                        chosen_package_id = min(package_id, package[0])
-                if chosen_package_id is not None:
-                    self.target_packages[chosen_package_id] = i
-                    for pkg_id, robot_id in list(self.target_packages.items()):
-                        if robot_id == i and pkg_id != chosen_package_id:
-                            del self.target_packages[pkg_id]
-
-                move_path = self.get_action(pos_robot, chosen_pos_pack)
-                move = 'S' if not move_path else move_path[0]
-                # If next step picks the package
-                if len(move_path) <= 1:
-                    pkg_act = 1  # pickup
-                else: 
-                    pkg_act = 0
+                print(self.target_packages.keys())
+                print(f"Hien dang co {len(self.waiting_packages)}")
+                chosen_package_id = self.target_packages[i]                
                 
                 for package in self.waiting_packages:
                     if package[0] == chosen_package_id:
-                        packages_owned.append(package[0])
-                        # print(f"Robot {i} dang tren duong di nhan goi hang {package}")
                         pos_package = (package[1], package[2])
                         move_path = self.get_action(pos_robot, pos_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
@@ -340,8 +321,10 @@ class AgentsVersion5:
         for i in range(len(robots)):
             self.robots[i] = robots[i]
 
-        # find all cycle in move actions
-        # print(len(robots), len(actions), robots, actions)
+
+        # for i in range(len(robots)):
+        #     if i 
+
         cycles_list, actions_list = find_all_cycle(map, robots, actions)
         old_pos = {}
         new_pos = {}
@@ -351,8 +334,6 @@ class AgentsVersion5:
             new_pos[self.compute_valid_position(map, pos_robot, actions[i][0])] = i
 
         for (element_robot, element_action) in zip(cycles_list, actions_list):
-            # print(len(element_robot), element_robot, element_action)
-            # Handle if there is multi cycle
             check = False
             for i in range(len(element_action)):
                 pos_robot = (element_robot[i][0], element_robot[i][1])
@@ -361,7 +342,6 @@ class AgentsVersion5:
                     moves = ['L', 'R', 'U', 'D']
                     moves.remove(element_action[i][0])
                     random.shuffle(moves)
-                    # for move in ['L', 'R', 'U', 'D']:
                     for move in moves:
                         if move != element_action[i][0]:
                             new_pos_robot = self.compute_valid_position(map, pos_robot, move)
@@ -385,18 +365,11 @@ class AgentsVersion5:
                 random.shuffle(moves)
                 for move in moves:
                     new_pos_robot = self.compute_valid_position(map, pos_robot, move)
-                    # if new_pos not in occupied and valid_position(map, new_pos):
                     if new_pos_robot not in old_pos and new_pos_robot not in new_pos and pos_robot in new_pos and valid_position(map, new_pos_robot):
                         actions[i] = (move, actions[i][1])
                         new_pos[new_pos_robot] = i
                         break
         cycle_list, action_list = find_all_cycle(map, robots, actions)
-        # print(len(cycle_list))
-        # print(cycle_list, action_list)
-
-
-        # print("N robots = ", len(self.robots))
-        # print("Actions = ", actions)
         return actions
 
 if __name__ == "__main__":

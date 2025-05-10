@@ -3,6 +3,7 @@ from collections import deque
 import numpy as np
 random.seed(2025)
 np.random.seed(2025)
+import networkx as nx
 
 def compute_valid_position(map, position, move):
     r, c = position
@@ -140,8 +141,38 @@ class AgentsVersion4:
         self.transited_packages = []
         self.transit_succes = 0
 
-    def optimal_assgin(self, robots, waiting_packages):
-        return []
+    def optimal_assign(self, robot_pos, package_id_lists):
+        '''
+        Input:
+            Robot_pos: list các tuple có dạng (robot_id, robot_row, robot_col)
+            Package_id_pos: list các tuple có dạng (pkg_id, pkg_row, pkg_col, pkg_start, pkg_deadline)
+        Output: 
+            assign: dictionary với key: robot_id, value: pkg_id => assign[robot_id] = pkg_id
+        '''
+        G = nx.DiGraph()
+        G.add_node('s'); G.add_node('t')
+        # Cung s->robot
+        for r in robot_pos:
+            G.add_edge('s', str(r[0]), capacity=1, weight=0)
+        for r in robot_pos:
+            for p in package_id_lists:
+                G.add_edge(str(r[0]), str(p[0]), capacity=1, 
+                            weight=len(self.board_path[((r[1], r[2]), (p[1], p[2]))]))
+        for p in package_id_lists:
+            G.add_edge(str(p[0]), 't', capacity=1, weight=0)
+        flow_dict = nx.max_flow_min_cost(G, 's', 't')
+        total_cost = nx.cost_of_flow(G, flow_dict)  # Tính tổng chi phí
+
+        assignment = {}
+        for node, flows in flow_dict.items():
+            if node != 's' and node != 't' and node in [str(r[0]) for r in robot_pos]: 
+                robot_id = int(node)
+
+                for pkg_node, flow in flows.item():
+                    if pkg_node != 't' and flow > 0:
+                        package_id = int(pkg_node)
+                        assignment[robot_id] = package_id
+        return assignment, total_cost
 
     def init_agents(self, state):
         self.state = state

@@ -190,15 +190,20 @@ class AgentsVersion5:
             G.add_edge('s', str(r[0]), capacity=1, weight=0)
         for r in robot_pos:
             for p in package_id_lists:
-                pos_robot = (r[1] - 1, r[2] - 1)
-                start_package = (p[1] - 1, p[2] - 1)
-                target_package = (p[3] - 1, p[4] - 1)
-                print(self.board_path.keys())
-                weight_assigned = len(self.board_path[(pos_robot, start_package)])
-                if self.differ_connected(pos_robot, start_package):
-                    continue
-                if self.differ_connected(start_package, target_package):
-                    continue
+                # pos_robot = (r[1] - 1, r[2] - 1)
+                # start_package = (p[1] - 1, p[2] - 1)
+                # target_package = (p[3] - 1, p[4] - 1)
+                pos_robot = (r[1], r[2])
+                start_package = (p[1], p[2])
+                target_package = (p[3], p[4])
+                if pos_robot == start_package:
+                    weight_assigned = 0
+                else:
+                    weight_assigned = len(self.board_path[(pos_robot, start_package)])
+                # if self.differ_connected(pos_robot, start_package):
+                #     continue
+                # if self.differ_connected(start_package, target_package):
+                #     continue
                 G.add_edge(str(r[0]), str(p[0]), capacity=1, 
                             weight=weight_assigned)
         for p in package_id_lists:

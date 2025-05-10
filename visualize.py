@@ -18,9 +18,8 @@ class DeliveryVisualizer:
         self.time_text = None
         self.reward_text = None
         self.state_history = []  # Store all states for playback
-        self.reward_history = []  # Store rewards
+        self.reward_history = []  
         
-        # Color settings
         self.colors = {
             'wall': 'black',
             'free': 'white',
@@ -164,8 +163,9 @@ class DeliveryVisualizer:
         
         # Update time and reward text
         self.time_text.set_text(f'Time Step: {state["time_step"]}')
-        total_reward = sum(self.reward_history)
-        self.reward_text.set_text(f'Total Reward: {total_reward:.2f}')
+        
+        # Use just the current reward value, not the sum
+        self.reward_text.set_text(f'Total Reward: {reward}')
         
         # Add centered large timestep indicator that fades
         # timestep_big = self.ax.text(0.5, 0.5, f'{state["time_step"]}', 
@@ -226,19 +226,43 @@ class DeliveryVisualizer:
         self.fig.canvas.draw()
         
     def process_packages(self, state):
-        """Process package visualization"""
-        # Add new packages from this state
-        for package in state.get('packages', []):
-            pkg_id = package[0]
-            start_row, start_col = package[1]-1, package[2]-1
-            target_row, target_col = package[3]-1, package[4]-1
-            start_time, deadline = package[5], package[6]
+        """Process package visualization with respect to time"""
+        # Get current time step
+        current_time = state['time_step']
+        
+        # Get packages from the environment's internal state
+        env_packages = self.env.packages
+        
+        # First, hide any package markers that shouldn't be visible
+        # (those with start time > current_time and not yet in transit/delivered)
+        for pkg_id in list(self.package_markers.keys()):
+            pkg = next((p for p in env_packages if p.package_id == pkg_id), None)
+            if pkg and pkg.start_time > current_time and pkg.status == 'None':
+                # Remove the visual elements if they exist
+                marker = self.package_markers[pkg_id]
+                marker['pickup'].remove()
+                marker['target'].remove()
+                marker['pickup_text'].remove()
+                marker['target_text'].remove()
+                del self.package_markers[pkg_id]
+        
+        # Process only packages that should be visible now
+        for pkg in env_packages:
+            pkg_id = pkg.package_id
             
-            # Only add if not already tracked
+            # Skip packages that haven't appeared yet
+            if pkg.start_time > current_time and pkg.status == 'None':
+                continue
+                
+            start_row, start_col = pkg.start[0], pkg.start[1]
+            target_row, target_col = pkg.target[0], pkg.target[1]
+            status = pkg.status  # 'None', 'waiting', 'in_transit', or 'delivered'
+            
+            # Create marker if it doesn't exist
             if pkg_id not in self.package_markers:
                 # Pickup location marker
                 pickup_marker = Rectangle((start_col-0.4, start_row-0.4), 0.8, 0.8,
-                                          color=self.colors['package_waiting'], alpha=0.5, zorder=2)
+                                        color=self.colors['package_waiting'], alpha=0.5, zorder=2)
                 self.ax.add_patch(pickup_marker)
                 
                 # Target location marker
@@ -261,69 +285,63 @@ class DeliveryVisualizer:
                     'target': target_marker,
                     'pickup_text': pickup_text,
                     'target_text': target_text,
-                    'status': 'waiting',
-                    'info': package
+                    'status': status
                 }
-        
-        # Check robot states to update package status
-        for robot in state['robots']:
-            carrying = robot[2]
-            if carrying > 0 and carrying in self.package_markers:
-                pkg = self.package_markers[carrying]
-                if pkg['status'] != 'in_transit':
-                    pkg['status'] = 'in_transit'
-                    pkg['pickup'].set_color(self.colors['package_transit'])
-        
-        # Clean up delivered packages
-        # We need to infer this from robots no longer carrying packages they had before
-        for pkg_id, pkg in list(self.package_markers.items()):
-            is_carried = False
-            for robot in state['robots']:
-                if robot[2] == pkg_id:
-                    is_carried = True
-                    break
             
-            if pkg['status'] == 'in_transit' and not is_carried:
-                # Package was dropped off
-                pkg['status'] = 'delivered'
-                pkg['target'].set_color(self.colors['package_delivered'])
+            # Update color based on status
+            marker = self.package_markers[pkg_id]
+            current_status = marker['status']
+            
+            if status != current_status:
+                marker['status'] = status
+                if status == 'in_transit':
+                    marker['pickup'].set_color(self.colors['package_transit'])
+                elif status == 'delivered':
+                    marker['target'].set_color(self.colors['package_delivered'])
+                elif status == 'waiting':
+                    marker['pickup'].set_color(self.colors['package_waiting'])
     
     def run_animation(self, env, agents, steps=100):
         """Run the animation by simulating the environment"""
         state = env.reset()
         agents.init_agents(state)
-        self.update_visualization(state)
         
-        all_packages = {}
+        # Clear any existing visualizations
+        self.package_markers = {}
+        self.robot_markers = []
+        
         done = False
         t = 0
+        final_reward = 0
         
         while not done and t < steps:
             # Check if animation is paused
             while not self.animation_running:
-                plt.pause(0.1)  # Keep UI responsive while paused
+                plt.pause(0.1)
                 if not plt.fignum_exists(self.fig.number):
-                    return {}  # Window was closed
+                    return {}
             
+            # Get planned actions for current state
             actions = agents.get_actions(state)
+            
+            # Display current state with planned actions
+            self.update_visualization(state, round(env.total_reward, 2), actions)
+            
+            # Pause to let user see planned moves
+            plt.pause(self.animation_speed)
+            
+            # Execute step in environment
             next_state, reward, done, infos = env.step(actions)
             
-            # Track all packages that have appeared
-            for pkg in next_state.get('packages', []):
-                pkg_id = pkg[0]
-                all_packages[pkg_id] = pkg
-            
-            # Make sure the state includes ALL packages that have appeared so far
-            state_with_all_packages = next_state.copy()
-            state_with_all_packages['all_packages'] = list(all_packages.values())
-            
-            # Pass actions to update_visualization
-            self.update_visualization(state_with_all_packages, reward, actions)
+            # Update state for next iteration
             state = next_state
             t += 1
             
-            # Use the current animation speed (controlled by slider)
-            plt.pause(self.animation_speed)
+            # Store final reward when done
+            if done:
+                final_reward = infos.get('total_reward', env.total_reward)
+                # Update visualization one last time with the final reward
+                self.update_visualization(state, round(final_reward, 2), actions)
             
             # Check if window was closed
             if not plt.fignum_exists(self.fig.number):
@@ -375,9 +393,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Multi-Agent Reinforcement Learning for Delivery")
     parser.add_argument("--num_agents", type=int, default=5, help="Number of agents")
     parser.add_argument("--n_packages", type=int, default=10, help="Number of packages")
-    parser.add_argument("--max_steps", type=int, default=1000, help="Maximum number of steps per episode")
-    parser.add_argument("--seed", type=int, default=2025, help="Random seed for reproducibility")
-    parser.add_argument("--max_time_steps", type=int, default=1000, help="Maximum time steps for the environment")
+    parser.add_argument("--max_steps", type=int, default=100, help="Maximum number of steps per episode")
+    parser.add_argument("--seed", type=int, default=10, help="Random seed for reproducibility")
+    parser.add_argument("--max_time_steps", type=int, default=100, help="Maximum time steps for the environment")
     parser.add_argument("--map", type=str, default="map5.txt", help="Map name")
 
     args = parser.parse_args()

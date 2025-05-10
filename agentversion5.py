@@ -220,11 +220,17 @@ class AgentsVersion5:
                 pos_robot = (robots[i][0], robots[i][1])
                 moves = ['L', 'R', 'U', 'D']
                 moves.remove(self.last_move[i][0])
-                for move in moves:
-                    new_pos_robot = compute_valid_position(map, pos_robot, move)
-                    if valid_position(map, new_pos_robot):
-                        actions.append((str(move), str(0)))
-                        break
+                move_action = random.choice(moves)
+                actions.append((str(move_action), str(0)))
+                # for move in moves:
+                #     new_pos_robot = compute_valid_position(map, pos_robot, move)
+                #     x, y = new_pos_robot
+                #     # print(x, y, map[x][y], valid_position(map, new_pos_robot), move)
+                #     if new_pos_robot != pos_robot:
+                #         # print(f"Robot {i} stay at {pos_robot} in  {self.count_repeat[i]}")
+                #         actions.append((str(move), str(0)))
+                #         break
+
                 continue
 
             last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]

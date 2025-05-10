@@ -168,6 +168,9 @@ class AgentsVersion5:
         self.transited_packages = [] # Danh sách gói hàng đã được giao
         self.target_transit = {} # Ánh xạ robot với waiting package đang được chỉ định phải nhặt
         self.count_repeat = [] # Lưu số lần vị trí đã được lặp lại
+        self.last_move = [] # Lưu move của step trước
+
+        self.NUM_REPEAT = 10
 
     # Khởi tạo thông tin dựa trên state được khởi tạo ban đầu
     def init_agents(self, state):
@@ -209,6 +212,20 @@ class AgentsVersion5:
 
         # Duyệt qua từng robot
         for i in range(len(robots)):
+            if (robots[i][0], robots[i][1]) == (self.robots[i][0], self.robots[i][1]):
+                self.count_repeat[i] += 1
+            else:
+                self.count_repeat[i] = 1
+            if self.count_repeat[i] >= self.NUM_REPEAT and self.last_move[i][0] != 'S':
+                pos_robot = (robots[i][0], robots[i][1])
+                moves = ['L', 'R', 'U', 'D']
+                moves.remove(self.last_move[i][0])
+                for move in moves:
+                    new_pos_robot = compute_valid_position(map, pos_robot, move)
+                    if valid_position(map, new_pos_robot):
+                        actions.append((str(move), str(0)))
+                        break
+                continue
 
             last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
             pos_robot_i, pos_robot_j, carrying = robots[i]
@@ -341,7 +358,7 @@ class AgentsVersion5:
                 moves = ['L', 'R', 'U', 'D']
                 print(element_action[i][0])
                 moves.remove(element_action[i][0])
-                random.shuffle(moves) # Có thể dùng
+                # random.shuffle(moves) # Có thể dùng
 
                 # Duyệt từng hướng di chuyển xem có thay đổi được action đang xét không
                 for move in moves:
@@ -368,7 +385,7 @@ class AgentsVersion5:
             if actions[i][0] == 'S':
                 if len(new_pos[pos_robot]) > 1: # Có robot khác muốn đi tới vị trí này
                     moves = ['L', 'R', 'U', 'D']
-                    random.shuffle(moves)
+                    # random.shuffle(moves)
 
                     # Duyệt từng hướng di chuyển xem có thay đổi được action đang xét không
                     for move in moves:
@@ -377,6 +394,8 @@ class AgentsVersion5:
                             actions[i] = (move, actions[i][1])
                             new_pos[new_pos_robot] = [pos_robot]
                             break
+
+        self.last_move = actions
 
         print(f"Robots are in: {self.robots}")
         print(f"Final Actions is: {actions}")

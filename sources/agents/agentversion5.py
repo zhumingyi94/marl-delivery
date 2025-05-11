@@ -1,6 +1,6 @@
 import random
 from collections import deque
-import networkx as nx
+# import networkx as nx
 
 # Các vị trí các ô trên board, vị trí robots, packages đều tính từ 1
 
@@ -155,7 +155,7 @@ def get_shortest_path(map):
     return list_path
 
 # Khởi tạo agents
-class AgentsVersion6:
+class AgentsVersion5:
     # Khởi tạo mặc định
     def __init__(self):
         self.state = None
@@ -191,57 +191,11 @@ class AgentsVersion6:
             return ""
         return self.board_path[(start, target)]
 
-    # Dùng luồng để tìm tìm tổng đường đi ngắn nhất cho tất cả robot / tất cả gói hàng hiện có
-    def optimal_assign(self, now_step, robots, packages, alpha=1, beta=1):
-        # robots gồm các phần tử dạng (robot_id, robot_x, robot_y)
-        # packages gồm các package theo cấu trúc đã cho
-        G = nx.DiGraph()
-        G.add_node('s')
-        G.add_node('t')
-
-        # 1) s → robot
-        for robot in robots:
-            robot_id = robot[0]
-            G.add_edge('s', f"robot_{robot_id}", capacity=1, weight=0)
-
-        # 2) robot → package
-        for robot in robots:
-            robot_id = robot[0]
-            for package in packages:
-                package_id = package[0]
-                pos_robot = (robot[1], robot[2])
-                start_package = (package[1], package[2])
-                target_package = (package[3], package[4])
-
-
-                len_path = alpha * len(self.get_action(pos_robot, start_package)) + beta * len(self.get_action(start_package, target_package))
-                if now_step + len_path > package[6]:
-                    continue
-                G.add_edge(f"robot_{robot_id}", f"package_{package_id}", capacity=1, weight=len_path)
-
-        # 3) package → t
-        for package in packages:
-            package_id = package[0]
-            G.add_edge(f"package_{package_id}", 't', capacity=1, weight=0)
-
-        flow_dict = nx.max_flow_min_cost(G, 's', 't')
-
-        result = {}
-        for u, flows in flow_dict.items():
-            # Bỏ qua các node không phải là robot
-            # -> chỉ quan tâm cạnh nối từ robot->package
-            if not u.startswith('robot'):
-                continue
-
-            robot_id = int(u.split('_')[1])
-            for v, f in flows.items():
-                if f>0 and v.startswith('package'):
-                    package_id = int(v.split('_')[1])
-                    result[robot_id] = package_id
-        return result
+    # def optimal_assign(self, robot_list, waiting_package_list):
+    #     0
 
     # Đưa ra action cho từng robot theo thứ tự dựa trên state nhận được
-    def get_actions(self, state):
+    def get_actions(self, state, alpha=1, beta=1):
         print(state)
 
         actions = []
@@ -249,15 +203,14 @@ class AgentsVersion6:
         robots = state['robots']
         packages = state['packages']
 
+        packages_owned = []
+
         # Thêm tất cả package mới xuất hiện vào danh sách chờ
         for package in packages:
             self.packages[package[0]] = package
             self.waiting_packages.append(package)
 
-        compute_robots = []
-        compute_packages = []
-
-        # Duyệt qua từng robot (chỉ duyệt robot đang giao hàng)
+        # Duyệt qua từng robot
         for i in range(len(robots)):
             # Nếu vị trí lặp lại quá nhiều lần thì sẽ xử lý bằng cách random hướng để thoát khỏi thế đứng im đó
             if (robots[i][0], robots[i][1]) == (self.robots[i][0], self.robots[i][1]):
@@ -307,41 +260,67 @@ class AgentsVersion6:
                 if len(self.waiting_packages) == 0:
                     actions.append((str('S'), str(0)))
                     continue
+                print(f"Waiting package set includes: {self.waiting_packages}")
 
-                # Thêm vào danh sách những robot đang tìm đường nhặt package
-                compute_robots.append((i, robots[i][0], robots[i][1]))
-                actions.append((str('S'), str(0))) # Gán để lấp đầy actions, sau có thể dễ dàng thay đổi giá trị thông qua robot_id tương ứng
+                # Ánh xạ từ vị trí chứa package tới tập các package_id trong vị trí đó
+                valid_pos_package = {}
+                for package in self.waiting_packages:
+                    pos = (package[1], package[2])
+                    # Bỏ qua những package_id đã được nhắm để nhặt
+                    if pos in packages_owned:
+                        continue
+                    # Nếu chưa tồn tại vị trí trong map thì gán giá trị bằng package_id luôn
+                    if pos not in valid_pos_package:
+                        valid_pos_package[pos] = package[0]
+                    # Nếu đã tồn tại thì gán với package_id nhỏ nhất
+                    valid_pos_package[pos] = min(valid_pos_package[pos], package[0])
 
-        print(f"Waiting package set includes: {self.waiting_packages}")
+                len_min_path = 10000
+                package_id = -1
 
-        # Ánh xạ từ vị trí chứa package tới tập các package_id sẽ nhận trong vị trí đó (là package_id bé nhất trong đó)
-        valid_pos_package = {}
-        for package in self.waiting_packages:
-            pos = (package[1], package[2])
+                # Tìm package tốt nhất
+                for start_package in valid_pos_package:
+                    package = self.packages[valid_pos_package[start_package]]
+                    # if package[0] in packages_owned # Dùng để tránh 2 robot cùng đi nhặt 1 package
+                    if True:
+                        target_package = (package[3], package[4])
 
-            # Nếu chưa tồn tại vị trí trong map thì gán giá trị bằng package_id luôn
-            if pos not in valid_pos_package:
-                valid_pos_package[pos] = package[0]
-            # Nếu đã tồn tại thì gán với package_id nhỏ nhất
-            valid_pos_package[pos] = min(valid_pos_package[pos], package[0])
+                        # Nếu (pos_package và start_package) hoặc (start_package) khác thành phần liên thông thì bỏ qua không nhặt
+                        # (Vì nếu không sẽ lỗi truy xuất đường đi)
+                        if self.differ_connected(pos_robot, start_package):
+                            continue
+                        if self.differ_connected(start_package, target_package):
+                            continue
 
-        values_package = valid_pos_package.values()
-        for package_id in values_package:
-            package = self.packages[package_id]
-            compute_packages.append(package)
+                        # Hàm đánh giá lựa chọn là tổng quãng đường từ vị trí hiện tại với vị trí package và tới vị trí giao package
+                        start_path = self.get_action(pos_robot, start_package)
+                        target_path = self.get_action(start_package, target_package)
+                        len_path = alpha * len(start_path) + beta * len(target_path)
 
-        print(compute_robots, compute_packages)
-        optimal_assign = self.optimal_assign(state['time_step'], compute_robots, compute_packages)
-        print(optimal_assign)
-        for robot_id, package_id in optimal_assign.items():
-            pos_robot = (robots[robot_id][0], robots[robot_id][1])
-            package = self.packages[package_id]
-            start_package = (package[1], package[2])
-            move_path = self.get_action(pos_robot, start_package)
-            move = 'S' if len(move_path) == 0 else move_path[0]
-            pkg_act = 1 if len(move_path) <= 1 else 0
-            actions[robot_id] = (str(move), str(pkg_act))
+                        if state['time_step'] + len_path > package[6]:
+                            continue
+                        if len_path < len_min_path:
+                            len_min_path = len_path
+                            package_id = package[0]
 
+                # Không tìm thấy package nào phù hợp để nhặt
+                if package_id == -1:
+                    actions.append((str('S'), str(0)))
+                    continue
+
+                # Vì nếu có package_id thỏa mãn thì robot chắc chắn nhặt được (mà đảm bảo không nhặt cùng robot khác)
+                waited_package = self.packages[package_id]
+                print(f"Robot {i} in way to carry package_id {waited_package}")
+
+                start_package = (waited_package[1], waited_package[2])
+                packages_owned.append(start_package)
+
+                move_path = self.get_action(pos_robot, start_package)
+                move = 'S' if len(move_path) == 0 else move_path[0]
+                pkg_act = 1 if len(move_path) <= 1 else 0
+                actions.append((str(move), str(pkg_act)))
+
+            print(f"Robot {i} execute {(move, pkg_act)}")
         print(f"Start Actions : {actions}")
 
         # Cập nhật vị trí robot của state hiện tại vào bộ nhớ
@@ -398,6 +377,8 @@ class AgentsVersion6:
                     break
 
         print(f"Actions after process cycles: {actions}")
+
+
 
         # Xử lý những robot có thể gây chắn đường khi ở trạng thái
         for i in range(len(actions)):

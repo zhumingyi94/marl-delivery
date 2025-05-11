@@ -259,23 +259,23 @@ class Agents_TAD:
                             # return actions
 
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
-        # occupied = {}
-        # old_pos = {}
-        #
-        # for i in range(len(actions)):
-        #     pos_robot = (robots[i][0], robots[i][1])
-        #     old_pos[pos_robot] = i
-        #     if actions[i][0] != 'S':
-        #         occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
-        # for i in range(len(actions)):
-        #     if actions[i][0] == 'S' and actions[i][1] != '1':
-        #         for move in ['L', 'R', 'U', 'D']:
-        #             print(move)
-        #             new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
-        #             if new_pos not in occupied:
-        #                 print("new pos", 2, i, new_pos)
-        #                 actions[i] = (move, actions[i][1])
-        #                 break
+        occupied = {}
+        old_pos = {}
+
+        for i in range(len(actions)):
+            pos_robot = (robots[i][0], robots[i][1])
+            old_pos[pos_robot] = i
+            if actions[i][0] != 'S':
+                occupied[self.compute_valid_position(map, (robots[i][0], robots[i][1]), actions[i][0])] = i
+        for i in range(len(actions)):
+            if actions[i][0] == 'S' and actions[i][1] != '1':
+                for move in ['L', 'R', 'U', 'D']:
+                    print(move)
+                    new_pos = self.compute_valid_position(map, (robots[i][0], robots[i][1]), move)
+                    if new_pos not in occupied:
+                        print("new pos", 2, i, new_pos)
+                        actions[i] = (move, actions[i][1])
+                        break
 
 
         print("N robots = ", len(self.robots))

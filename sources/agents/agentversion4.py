@@ -106,7 +106,7 @@ def get_shortest_path(map):
 
         while queue:
             x, y = queue.popleft()
-
+            random.shuffle(directions)
             for (direc_move, (di, dj)) in directions:
                 pos_i = x + di
                 pos_j = y + dj
@@ -184,7 +184,6 @@ class AgentsVersion4:
         return self.board_path[(start, target)]
 
     def get_actions(self, state):
-        random.seed(10)
         print(state)
         actions = []
         packages = state['packages']
@@ -248,6 +247,7 @@ class AgentsVersion4:
 
                 for package in self.waiting_packages:
                     if package[0] not in packages_owned:
+                    # if True:
                         start_package = (package[1], package[2])
                         target_package = (package[3], package[4])
                         if self.differ_connected(pos_robot, start_package):
@@ -299,7 +299,10 @@ class AgentsVersion4:
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             old_pos[pos_robot] = i
-            new_pos[self.compute_valid_position(map, pos_robot, actions[i][0])] = i
+            new_pos_robot = self.compute_valid_position(map, pos_robot, actions[i][0])
+            if new_pos_robot not in new_pos:
+                new_pos[new_pos_robot] = []
+            new_pos[new_pos_robot].append(i)
 
         for (element_robot, element_action) in zip(cycles_list, actions_list):
             print(len(element_robot), element_robot, element_action)
@@ -318,7 +321,9 @@ class AgentsVersion4:
                             new_pos_robot = self.compute_valid_position(map, pos_robot, move)
                             if new_pos_robot not in old_pos and new_pos_robot not in new_pos and valid_position(map, new_pos_robot):
                                 print("new pos", 1, i, pos_robot, new_pos_robot)
-                                new_pos[new_pos_robot] = i
+                                new_pos[new_pos_robot] = []
+                                new_pos[new_pos_robot].append(i)
+
                                 element_action[i] = (move, element_action[i][1])
                                 check = True
                                 break
@@ -327,11 +332,14 @@ class AgentsVersion4:
                         actions[j] = element_action[i]
                 if check:
                     break
+
         print("Actions = ", actions)
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             if actions[i][0] == 'S' and actions[i][1] != '1':
+                if pos_robot in new_pos and len(new_pos[pos_robot]) == 1:
+                    continue
                 moves = ['L', 'R', 'U', 'D']
                 random.shuffle(moves)
                 for move in moves:
@@ -339,12 +347,12 @@ class AgentsVersion4:
                     # if new_pos not in occupied and valid_position(map, new_pos):
                     if new_pos_robot not in old_pos and new_pos_robot not in new_pos and pos_robot in new_pos and valid_position(map, new_pos_robot):
                         actions[i] = (move, actions[i][1])
-                        new_pos[new_pos_robot] = i
+                        new_pos[new_pos_robot] = []
+                        new_pos[new_pos_robot].append(i)
                         break
         cycle_list, action_list = find_all_cycle(map, robots, actions)
         print(len(cycle_list))
         print(cycle_list, action_list)
-
 
         print("N robots = ", len(self.robots))
         print("Actions = ", actions)

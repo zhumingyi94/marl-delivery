@@ -161,7 +161,7 @@ class AgentsVersion1:
                         # As only deliverable packages are selected during traversal, paths that do not exist are ignored
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
-                        if len(move_path) > 1:
+                        if len(move_path) != 1:
                             pkg_act = 0
                         else:
                             pkg_act = 2
@@ -211,7 +211,7 @@ class AgentsVersion1:
                         pos_package = (package[1], package[2])
                         move_path = self.get_action(pos_robot, pos_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
-                        if len(move_path) <= 1:
+                        if len(move_path) == 1:
                             pkg_act = 1
                             self.in_transit_packages.append(package)
                             self.waiting_packages.remove(package)
@@ -221,6 +221,8 @@ class AgentsVersion1:
 
             print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
+
+        print("Actions = ", actions)
 
         # Handle if there is a cycle
         old_move = {}
@@ -261,8 +263,7 @@ class AgentsVersion1:
                 for move in ['L', 'R', 'U', 'D']:
                     new_pos_robot = self.compute_valid_position(map, pos_robot, move)
                     # if new_pos not in occupied and valid_position(map, new_pos):
-                    if new_pos_robot not in old_pos and new_pos_robot not in occupied and valid_position(map,
-                                                                                                        new_pos_robot):
+                    if new_pos_robot not in old_pos and pos_robot in occupied and valid_position(map, new_pos_robot):
                         actions[i] = (move, actions[i][1])
                         occupied[new_pos_robot] = i
 

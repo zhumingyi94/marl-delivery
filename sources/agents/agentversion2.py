@@ -121,7 +121,7 @@ def get_shortest_path(map):
                         list_path[(start, target)] = str_path[pos_i][pos_j]
     return list_path
 
-class AgentsVersion3:
+class AgentsVersion2:
     def __init__(self):
         self.n_robots = 0
         self.state = None
@@ -194,48 +194,38 @@ class AgentsVersion3:
         for package in packages:
             self.packages.append(package)
             self.waiting_packages.append(package)
+        for i in range(len(robots)):
+            self.robots[i] = robots[i]
 
         for i in range(len(robots)):
             # move = str(np.random.choice(list_actions))
             move = 'S'
             pkg_act = 0
 
-            last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
-            last_pos_robot = (last_pos_robot_i, last_pos_robot_j)
-
             pos_robot_i, pos_robot_j, carrying = robots[i]
             pos_robot = (pos_robot_i, pos_robot_j)
             print(f"Robot {i} dang o vi tri {pos_robot}")
 
             if carrying != 0: # If the robot is transporting a package
-                if last_carrying == 0:
-                    for package in self.waiting_packages.copy():
-                        if package[0] == carrying:
-                            self.in_transit_packages.append(package)
-                            self.waiting_packages.remove(package)
-                            break
-
                 print(f"Package set in transit {self.in_transit_packages}")
                 print(f"Robot {i} o vi tri {pos_robot} va dang cam package_id {carrying}")
-                for package in self.in_transit_packages:
+                for package in self.in_transit_packages.copy():
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
                         print(f"Diem tra goi hang {package[0]} la", target_package)
                         # As only deliverable packages are selected during traversal, paths that do not exist are ignored
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
-                        pkg_act = 2 if len(move_path) <= 1 else 0
-                        break
-
-            else: # The robot is on its way to find the package with the shortest delivery pat
-                if last_carrying != 0:
-                    for package in self.in_transit_packages.copy():
-                        if package[0] == last_carrying:
+                        if len(move_path) > 1:
+                            pkg_act = 0
+                        else:
+                            pkg_act = 2
                             self.transited_packages.append(package)
                             self.transit_succes += 1
                             self.in_transit_packages.remove(package)
-                            break
-
+                        break
+            else: # The robot is on its way to find the package with the shortest delivery pat
+                final_package = (1, 1)
                 len_min_path = 10000
                 if len(self.waiting_packages) == 0:
                     actions.append((str('S'), str(0)))
@@ -271,22 +261,22 @@ class AgentsVersion3:
                     if pos_pack == (package[1], package[2]):
                         package_id = min(package_id, package[0])
 
-                for package in self.waiting_packages:
+                for package in self.waiting_packages.copy():
                     if package[0] == package_id:
                         print(f"Robot {i} dang tren duong di nhan goi hang {package}")
                         pos_package = (package[1], package[2])
                         move_path = self.get_action(pos_robot, pos_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
-                        pkg_act = 1 if len(move_path) <= 1 else 0
+                        if len(move_path) <= 1:
+                            pkg_act = 1
+                            self.in_transit_packages.append(package)
+                            self.waiting_packages.remove(package)
+                        else:
+                            pkg_act = 0
                         break
 
             print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
-        print("Actions = ", actions)
-
-        # update position robot into Agents
-        for i in range(len(robots)):
-            self.robots[i] = robots[i]
 
         # find all cycle in move actions
         # print(len(robots), len(actions), robots, actions)
@@ -307,7 +297,7 @@ class AgentsVersion3:
                 if pos_robot in new_pos and next_pos in old_pos and pos_robot != next_pos:
                     moves = ['L', 'R', 'U', 'D']
                     moves.remove(element_action[i][0])
-                    random.shuffle(moves)
+                    # random.shuffle(moves)
                     # for move in ['L', 'R', 'U', 'D']:
                     for move in moves:
                         # print(i, move, actions[i][0], actions[i][1], type( actions[i][0]), type( actions[i][1]))
@@ -315,21 +305,19 @@ class AgentsVersion3:
                         if move != element_action[i][0]:
                             new_pos_robot = self.compute_valid_position(map, pos_robot, move)
                             if new_pos_robot not in old_pos and new_pos_robot not in new_pos and valid_position(map, new_pos_robot):
-                                print("new pos", 1, i, pos_robot, new_pos_robot)
+                                print("new pos", 1, i, new_pos_robot)
                                 new_pos[new_pos_robot] = i
                                 element_action[i] = (move, element_action[i][1])
                                 # return actions
                 for j in range(len(robots)):
                     if pos_robot == (robots[j][0], robots[j][1]):
                         actions[j] = element_action[i]
-        print("Actions = ", actions)
+
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
             if actions[i][0] == 'S' and actions[i][1] != '1':
-                moves = ['L', 'R', 'U', 'D']
-                random.shuffle(moves)
-                for move in moves:
+                for move in ['L', 'R', 'U', 'D']:
                     new_pos_robot = self.compute_valid_position(map, pos_robot, move)
                     # if new_pos not in occupied and valid_position(map, new_pos):
                     if new_pos_robot not in old_pos and new_pos_robot not in new_pos and pos_robot in new_pos and valid_position(map, new_pos_robot):
@@ -346,5 +334,5 @@ class AgentsVersion3:
         return actions
 
 if __name__ == "__main__":
-    agent = AgentsVersion3()
+    agent = AgentsVersion2()
     print(len(agent.board_path))

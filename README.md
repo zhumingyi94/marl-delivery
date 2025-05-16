@@ -30,8 +30,8 @@ Mô phỏng diễn ra trên bản đồ lưới với các quy tắc sau:
 
 Dự án bao gồm nhiều cài đặt agent khác nhau:
 
-1. **Agent A* Cơ Bản (`astar_base.py`)**: Sử dụng thuật toán tìm đường A* để điều hướng đến vị trí nhận và giao gói hàng
-2. **Lập Kế Hoạch Ưu Tiên A* (`astar_prioritized_planning.py`)**: Mở rộng A* với lập kế hoạch ưu tiên cho điều phối đa tác tử
+1. **Agent $A^{*}$ Cơ Bản (`astar_base.py`)**: Sử dụng thuật toán tìm đường $A^{*}$ để điều hướng đến vị trí nhận và giao gói hàng
+2. **Lập Kế Hoạch Ưu Tiên $A^{*}$ (`astar_prioritized_planning.py`)**: Mở rộng $A^{*}$ với lập kế hoạch ưu tiên cho điều phối đa tác tử
 3. **Agent CBS (`cbs_agent.py`)**: Triển khai thuật toán Tìm Kiếm Dựa Trên Xung Đột (CBS) cho bài toán tìm đường đa tác tử
 4. **Agent Tham Lam (`greedyagent.py`, `greedyagent_optimal.py`)**: Các phương pháp tham lam đơn giản cho bài toán giao hàng
 5. **Các Phiên Bản Agent Khác Nhau (`agentversion0.py`, `agentversion1.py`, `agentversion2.py`)**: Các cải tiến dần dần cho chiến lược agent

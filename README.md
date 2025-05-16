@@ -1,13 +1,13 @@
-# Bài Tập Lớn Mô Phỏng Giao Hàng Đa Tác Tử (MARL)
+# Bài tập lớn mô phỏng giao hàng đa tác tử (MARL)
 Báo cáo có thể tìm thấy tại: https://drive.google.com/file/d/1xai7ZkXbP3oN0NY3XrKJeShyIcMTBXMZ/view?usp=sharing
 
 ![Mô phỏng giao hàng](delivery_simulation2.gif)
 
-## Tổng Quan
+## Tổng quan
 
 Dự án này triển khai môi trường Đa tác tử (MARL) cho mô phỏng giao hàng. Trong môi trường này, nhiều tác tử (robot) làm việc cùng nhau để thu thập và giao các gói hàng trong bản đồ dạng lưới đồng thời tránh các chướng ngại vật.
 
-## Môi Trường
+## Môi trường
 
 Mô phỏng diễn ra trên bản đồ lưới với các quy tắc sau:
 - `0` đại diện cho ô trống mà các agent có thể di chuyển
@@ -16,9 +16,9 @@ Mô phỏng diễn ra trên bản đồ lưới với các quy tắc sau:
 - Các gói hàng có vị trí bắt đầu, vị trí đích và thời hạn
 - Các agent cần nhặt và giao gói hàng trước thời hạn
 
-## Thành Viên Nhóm
+## Thành viên nhóm
 
-### Phân Công Công Việc
+### Phân chia công việc
 
 | Tên | MSSV | Công Việc |
 |-----|------|-----------|
@@ -36,22 +36,22 @@ Dự án bao gồm nhiều cài đặt agent khác nhau:
 4. **Agent Tham Lam (`greedyagent.py`, `greedyagent_optimal.py`)**: Các phương pháp tham lam đơn giản cho bài toán giao hàng
 5. **Các Phiên Bản Agent Khác Nhau (`agentversion0.py`, `agentversion1.py`, `agentversion2.py`)**: Các cải tiến dần dần cho chiến lược agent
 
-## Tìm Đường
+## Tìm đường
 
 Dự án bao gồm các tiện ích tìm đường:
 - `find_path_map.py`: Tạo sẵn các đường đi giữa các vị trí trên bản đồ
 - `plot_map.py`: Tiện ích để trực quan hóa bản đồ và đường đi của agent
 - `utils.py`: Các hàm trợ giúp bao gồm các phương pháp tính khoảng cách (Manhattan, Euclidean, Đường chéo)
 
-## Bắt Đầu
+## Cài đặt
 
-### Yêu Cầu
+### Yêu cầu
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Chạy Mô Phỏng
+### Chạy mô phỏng
 
 Cách sử dụng cơ bản:
 
@@ -73,13 +73,13 @@ Các tham số:
 - `--max_time_steps`: Số bước thời gian tối đa cho môi trường
 - `--map`: Tên file bản đồ (ví dụ: map.txt, map1.txt, v.v.)
 
-## Bản Đồ
+## Bản đồ
 
 Dự án bao gồm một số file bản đồ:
 - `map.txt`: Bản đồ cơ bản
 - `map1.txt`, `map2.txt`, `map3.txt`, `map4.txt`, `map5.txt`: Các cấu hình bản đồ khác nhau
 
-## Trực Quan Hóa
+## Trực quan hóa
 
 Mô phỏng bao gồm trực quan hóa thời gian thực (thông qua `visualize.py`) hiển thị:
 - Bản đồ lưới với chướng ngại vật
@@ -87,7 +87,7 @@ Mô phỏng bao gồm trực quan hóa thời gian thực (thông qua `visualize
 - Vị trí nhận và giao gói hàng
 - Thông tin trạng thái bao gồm phần thưởng và số bước thời gian
 
-## Lựa Chọn Agent
+## Lựa chọn Agent
 
 Để thay đổi cài đặt agent, hãy sửa dòng import trong `main.py`:
 

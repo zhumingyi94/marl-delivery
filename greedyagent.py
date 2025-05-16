@@ -124,7 +124,7 @@ class GreedyAgents:
             self.update_inner_state(state)
 
         actions = []
-        print("State robot: ", self.robots)
+        # print("State robot: ", self.robots)
         # Start assigning a greedy strategy
         for i in range(self.n_robots):
             # Step 1: Check if the robot is already assigned to a package
@@ -164,7 +164,7 @@ class GreedyAgents:
                 else:
                     actions.append(('S', '0'))
 
-        print("N robots = ", len(self.robots))
-        print("Actions = ", actions)
-        print(self.robots_target)
+        # print("N robots = ", len(self.robots))
+        # print("Actions = ", actions)
+        # print(self.robots_target)
         return actions

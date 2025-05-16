@@ -278,7 +278,7 @@ class AgentsVersion6:
 
     # Đưa ra action cho từng robot theo thứ tự dựa trên state nhận được
     def get_actions(self, state):
-        print(state)
+        # print(state)
 
         actions = []
         map = state['map']
@@ -314,7 +314,7 @@ class AgentsVersion6:
             last_pos_robot_i, last_pos_robot_j, last_carrying = self.robots[i]
             pos_robot_i, pos_robot_j, carrying = robots[i]
             pos_robot = (pos_robot_i, pos_robot_j)
-            print(f"Robot {i} dang o vi tri {pos_robot}")
+            # print(f"Robot {i} dang o vi tri {pos_robot}")
 
             if carrying != 0: # Nếu robot đang cầm package
                 # Robot vừa nhặt thành công package trong step trước
@@ -323,12 +323,12 @@ class AgentsVersion6:
                     self.waiting_packages.remove(self.packages[carrying])
 
                 # Robot đang trên đường đi giao package
-                print(f"Transit package set includes: {self.transiting_packages}")
-                print(f"Robot {i} in {pos_robot} and carry package_id {carrying}")
+                # print(f"Transit package set includes: {self.transiting_packages}")
+                # print(f"Robot {i} in {pos_robot} and carry package_id {carrying}")
 
                 transiting_package = self.packages[carrying] # Gói hàng đang được giao (truy xuất thông qua carrying)
                 target_pos = (transiting_package[3], transiting_package[4])
-                print(f"Target package {carrying} in {target_pos}")
+                # print(f"Target package {carrying} in {target_pos}")
                 # Vì lúc nhặt đã xét chỉ nhặt gói hàng có start và target trong 1 thành phần liên thông, nên luôn tồn tại đường đi rồi
                 move_path = self.get_action(pos_robot, target_pos)
                 move = 'S' if len(move_path) == 0 else move_path[0]
@@ -352,7 +352,7 @@ class AgentsVersion6:
                 compute_robots.append((i, robots[i][0], robots[i][1]))
                 actions.append((str('S'), str(0))) # Gán để lấp đầy actions, sau có thể dễ dàng thay đổi giá trị thông qua robot_id tương ứng
 
-        print(f"Waiting package set includes: {self.waiting_packages}")
+        # print(f"Waiting package set includes: {self.waiting_packages}")
 
         # Ánh xạ từ vị trí chứa package tới tập các package_id sẽ nhận trong vị trí đó (là package_id bé nhất trong đó)
         valid_pos_package = {}
@@ -370,9 +370,9 @@ class AgentsVersion6:
             package = self.packages[package_id]
             compute_packages.append(package)
 
-        print(compute_robots, compute_packages)
+        # print(compute_robots, compute_packages)
         optimal_assign = self.optimal_assign(state['time_step'], compute_robots, compute_packages)
-        print(f"Optimal assign: {optimal_assign}")
+        # print(f"Optimal assign: {optimal_assign}")
         for robot_id, package_id in optimal_assign.items():
             pos_robot = (robots[robot_id][0], robots[robot_id][1])
             package = self.packages[package_id]
@@ -385,7 +385,7 @@ class AgentsVersion6:
         # Vì ưu tiên giao gói hàng chưa đến hạn, nên còn nhiều gói hàng hết deadline chưa được giao
         # Sẽ để những con robot trạng thái S đi nhặt
 
-        print(f"Start Actions : {actions}")
+        # print(f"Start Actions : {actions}")
 
         # Cập nhật vị trí robot của state hiện tại vào bộ nhớ
         for i in range(len(robots)):
@@ -410,7 +410,7 @@ class AgentsVersion6:
 
         # Duyệt qua từng chu trình để phá trạng thái này
         for (element_robot, element_action) in zip(cycles_list, actions_list):
-            print(f"Cycle includes robot: {element_robot} and corresponding action: {element_action}")
+            # print(f"Cycle includes robot: {element_robot} and corresponding action: {element_action}")
 
             check = False # Biến kiểm tra xem có phá trạng thái chu trình bằng cách thay đổi action của 1 robot chưa
             for i in range(len(element_action)):
@@ -419,7 +419,7 @@ class AgentsVersion6:
 
                 # Vì nó là chu trình, nên không cần xét vị trí mới có thuộc các tập không (chắc chắn phải thuộc tập hợp)
                 moves = ['L', 'R', 'U', 'D']
-                print(element_action[i][0])
+                # print(element_action[i][0])
                 moves.remove(element_action[i][0])
                 # random.shuffle(moves) # Có thể dùng
 
@@ -440,7 +440,7 @@ class AgentsVersion6:
                 if check:
                     break
 
-        print(f"Actions after process cycles: {actions}")
+        # print(f"Actions after process cycles: {actions}")
 
         # Xử lý những robot có thể gây chắn đường khi ở trạng thái
         for i in range(len(actions)):
@@ -460,6 +460,6 @@ class AgentsVersion6:
 
         self.last_move = actions
 
-        print(f"Robots are in: {self.robots}")
-        print(f"Final Actions is: {actions}")
+        # print(f"Robots are in: {self.robots}")
+        # print(f"Final Actions is: {actions}")
         return actions

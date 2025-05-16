@@ -353,15 +353,15 @@ class Environment:
         for i, robot in enumerate(self.robots):
             r, c = robot.position
             grid_copy[r][c] = 'R%i'%i
-        for row in grid_copy:
-            print('\t'.join(str(cell) for cell in row))
+        # for row in grid_copy:
+        #     print('\t'.join(str(cell) for cell in row))
         
 
 if __name__=="__main__":
     env = Environment('map.txt', 10, 2, 5)
     state = env.reset()
-    print("Initial State:", state)
-    print("Initial State:")
+    # print("Initial State:", state)
+    # print("Initial State:")
     env.render()
 
     # Agents
@@ -382,11 +382,11 @@ if __name__=="__main__":
     
         print("\nState after step:")
         env.render()
-        print(f"Reward: {reward}, Done: {done}, Infos: {infos}")
-        print("Total Reward:", env.total_reward)
-        print("Time step:", env.t)
-        print("Packages:", state['packages'])
-        print("Robots:", state['robots'])
+        # print(f"Reward: {reward}, Done: {done}, Infos: {infos}")
+        # print("Total Reward:", env.total_reward)
+        # print("Time step:", env.t)
+        # print("Packages:", state['packages'])
+        # print("Robots:", state['robots'])
 
         # For debug purpose
         t += 1

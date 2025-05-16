@@ -31,7 +31,7 @@ class DeliveryVisualizer:
         }
         
         # Add animation control variables
-        self.animation_speed = 0.1  # seconds between frames
+        self.animation_speed = 0.001  # seconds between frames
         self.animation_running = True
         self.pause_button = None
         self.speed_slider = None
@@ -349,7 +349,7 @@ class DeliveryVisualizer:
                 
         return infos
     
-    def save_animation(self, filename='delivery_simulation.gif', fps=5):
+    def save_animation(self, filename='delivery_simulation2.gif', fps=5):
         """Save the animation as a video file"""
         def animate(i):
             if i < len(self.state_history):
@@ -365,7 +365,7 @@ class DeliveryVisualizer:
 # Helper function to run the visualization
 def visualize_delivery(map_file='map5.txt', num_agents=5, n_packages=10, max_steps=100, seed=2025):
     from env import Environment
-    from agentversion7 import AgentsVersion5 as Agents
+    from agentversion2 import AgentsVersion2 as Agents
     
     env = Environment(map_file=map_file, max_time_steps=max_steps,
                       n_robots=num_agents, n_packages=n_packages,
@@ -381,7 +381,7 @@ def visualize_delivery(map_file='map5.txt', num_agents=5, n_packages=10, max_ste
     print(f"Total time steps: {infos.get('total_time_steps', 'N/A')}")
     
     # Save animation to file
-    # visualizer.save_animation()
+    visualizer.save_animation()
     
     # Keep the plot window open
     plt.show()

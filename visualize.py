@@ -363,9 +363,9 @@ class DeliveryVisualizer:
         print(f"Animation saved to {filename}")
 
 # Helper function to run the visualization
-def visualize_delivery(map_file='map5.txt', num_agents=5, n_packages=10, max_steps=100, seed=2025):
+def visualize_delivery(map_file='map4.txt', num_agents=5, n_packages=10, max_steps=100, seed=2025):
     from env import Environment
-    from agentversion7 import AgentsVersion5 as Agents
+    from agentversion2 import AgentsVersion2 as Agents
     
     env = Environment(map_file=map_file, max_time_steps=max_steps,
                       n_robots=num_agents, n_packages=n_packages,
@@ -396,7 +396,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_steps", type=int, default=100, help="Maximum number of steps per episode")
     parser.add_argument("--seed", type=int, default=10, help="Random seed for reproducibility")
     parser.add_argument("--max_time_steps", type=int, default=100, help="Maximum time steps for the environment")
-    parser.add_argument("--map", type=str, default="map5.txt", help="Map name")
+    parser.add_argument("--map", type=str, default="map4.txt", help="Map name")
 
     args = parser.parse_args()
     np.random.seed(args.seed)

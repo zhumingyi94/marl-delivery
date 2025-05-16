@@ -192,7 +192,7 @@ class AgentsVersion2:
         return self.board_path[(start, target)]
 
     # Dùng luồng để tìm tìm tổng đường đi ngắn nhất cho tất cả robot / tất cả gói hàng hiện có
-    def optimal_assign(self, now_step, robots, packages, alpha=1, beta=1):
+    def optimal_assign(self, now_step, robots, packages, alpha=0, beta=1):
         # robots gồm các phần tử dạng (robot_id, robot_x, robot_y)
         # packages gồm các package theo cấu trúc đã cho
         G = nx.DiGraph()

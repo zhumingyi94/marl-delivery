@@ -122,7 +122,7 @@ def get_shortest_path(map):
                         list_path[(start, target)] = str_path[pos_i][pos_j]
     return list_path
 
-class AgentsVersion5:
+class AgentsVersion7:
     def __init__(self):
         self.n_robots = 0
         self.state = None
@@ -245,7 +245,6 @@ class AgentsVersion5:
         for package in packages:
             self.packages.append(package)
             self.waiting_packages.append(package)
-
 
         # THÊMMMMMMMMMMMMMMMMMM
         robot_unassigned = []

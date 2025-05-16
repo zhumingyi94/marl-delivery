@@ -184,7 +184,7 @@ class AgentsVersion4:
         return self.board_path[(start, target)]
 
     def get_actions(self, state):
-        print(state)
+        # print(state)
         actions = []
         packages = state['packages']
         robots = state['robots']
@@ -206,7 +206,7 @@ class AgentsVersion4:
 
             pos_robot_i, pos_robot_j, carrying = robots[i]
             pos_robot = (pos_robot_i, pos_robot_j)
-            print(f"Robot {i} dang o vi tri {pos_robot}")
+            # print(f"Robot {i} dang o vi tri {pos_robot}")
 
             if carrying != 0: # If the robot is transporting a package
                 if last_carrying == 0:
@@ -216,12 +216,12 @@ class AgentsVersion4:
                             self.waiting_packages.remove(package)
                             break
 
-                print(f"Package set in transit {self.in_transit_packages}")
-                print(f"Robot {i} o vi tri {pos_robot} va dang cam package_id {carrying}")
+                # print(f"Package set in transit {self.in_transit_packages}")
+                # print(f"Robot {i} o vi tri {pos_robot} va dang cam package_id {carrying}")
                 for package in self.in_transit_packages:
                     if package[0] == carrying:
                         target_package = (package[3], package[4])
-                        print(f"Diem tra goi hang {package[0]} la", target_package)
+                        # print(f"Diem tra goi hang {package[0]} la", target_package)
                         # As only deliverable packages are selected during traversal, paths that do not exist are ignored
                         move_path = self.get_action(pos_robot, target_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
@@ -241,7 +241,7 @@ class AgentsVersion4:
                 if len(self.waiting_packages) == 0:
                     actions.append((str('S'), str(0)))
                     continue
-                print(f"Package set in waiting {self.waiting_packages}")
+                # print(f"Package set in waiting {self.waiting_packages}")
 
                 pos_pack = (1, 1)
 
@@ -276,23 +276,23 @@ class AgentsVersion4:
                 for package in self.waiting_packages:
                     if package[0] == package_id:
                         packages_owned.append(package[0])
-                        print(f"Robot {i} dang tren duong di nhan goi hang {package}")
+                        # print(f"Robot {i} dang tren duong di nhan goi hang {package}")
                         pos_package = (package[1], package[2])
                         move_path = self.get_action(pos_robot, pos_package)
                         move = 'S' if len(move_path) == 0 else move_path[0]
                         pkg_act = 1 if len(move_path) <= 1 else 0
                         break
 
-            print("Move", i, move, pkg_act)
+            # print("Move", i, move, pkg_act)
             actions.append((str(move), str(pkg_act)))
-        print("Actions = ", actions)
+        # print("Actions = ", actions)
 
         # update position robot into Agents
         for i in range(len(robots)):
             self.robots[i] = robots[i]
 
         # find all cycle in move actions
-        # print(len(robots), len(actions), robots, actions)
+        # # print(len(robots), len(actions), robots, actions)
         cycles_list, actions_list = find_all_cycle(map, robots, actions)
         old_pos = {}
         new_pos = {}
@@ -305,7 +305,7 @@ class AgentsVersion4:
             new_pos[new_pos_robot].append(i)
 
         for (element_robot, element_action) in zip(cycles_list, actions_list):
-            print(len(element_robot), element_robot, element_action)
+            # print(len(element_robot), element_robot, element_action)
             # Handle if there is multi cycle
             check = False
             for i in range(len(element_action)):
@@ -320,7 +320,7 @@ class AgentsVersion4:
                         if move != element_action[i][0]:
                             new_pos_robot = self.compute_valid_position(map, pos_robot, move)
                             if new_pos_robot not in old_pos and new_pos_robot not in new_pos and valid_position(map, new_pos_robot):
-                                print("new pos", 1, i, pos_robot, new_pos_robot)
+                                # print("new pos", 1, i, pos_robot, new_pos_robot)
                                 new_pos[new_pos_robot] = []
                                 new_pos[new_pos_robot].append(i)
 
@@ -333,7 +333,7 @@ class AgentsVersion4:
                 if check:
                     break
 
-        print("Actions = ", actions)
+        # print("Actions = ", actions)
         # If a moving robot would collide with a stationary robot, force the stationary robot to move
         for i in range(len(actions)):
             pos_robot = (robots[i][0], robots[i][1])
@@ -351,13 +351,13 @@ class AgentsVersion4:
                         new_pos[new_pos_robot].append(i)
                         break
         cycle_list, action_list = find_all_cycle(map, robots, actions)
-        print(len(cycle_list))
-        print(cycle_list, action_list)
+        # print(len(cycle_list))
+        # print(cycle_list, action_list)
 
-        print("N robots = ", len(self.robots))
-        print("Actions = ", actions)
+        # print("N robots = ", len(self.robots))
+        # print("Actions = ", actions)
         return actions
 
 if __name__ == "__main__":
     agent = AgentsVersion4()
-    print(len(agent.board_path))
+    # print(len(agent.board_path))

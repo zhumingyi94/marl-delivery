@@ -1,9 +1,9 @@
 from env import Environment
-from greedyagent import GreedyAgents as Agents
+# from greedyagent import GreedyAgents as Agents
 # from agentversion3 import AgentsVersion3 as Agents
-from cbs_agent import CBSAgent as Agents
+# from cbs_agent import CBSAgent as Agents
 # from astar_base import AStarBase as Agents
-# from astar_prioritized_planning import AgentsPrioritizedPlanning as Agents
+from astar_prioritized_planning import AgentsPrioritizedPlanning as Agents
 
 import numpy as np
 

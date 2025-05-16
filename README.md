@@ -22,9 +22,9 @@ Mô phỏng diễn ra trên bản đồ lưới với các quy tắc sau:
 
 | Tên | MSSV | Công Việc |
 |-----|------|-----------|
-| [Trần Ánh Dương] | [22028334] | [Cài đặt 3 phiên bản thuật tự customize 0,1,2 và phát hiện các vấn đề khi cài đặt] |
-| [Tăng Vĩnh Hà] | [22028129] | [Chuẩn bị code visualize để hỗ trợ phát hiện các vấn đề khi cài đặt, viết báo cáo, cài đặt phiên bản thuật tự customize 2] |
-| [Đỗ Minh Nhật] | [22022537] | [Chuẩn bị code visualize, cài đặt 2 phiên bản thuật toán A*, Conflict-based search và viết báo cáo.] |
+| Trần Ánh Dương | 22028334 | Cài đặt 3 phiên bản thuật tự customize 0,1,2 và phát hiện các vấn đề khi cài đặt |
+| Tăng Vĩnh Hà | 22028129 | Chuẩn bị code visualize để hỗ trợ phát hiện các vấn đề khi cài đặt, viết báo cáo, cài đặt phiên bản thuật tự customize 2 |
+| Đỗ Minh Nhật | 22022537 | Chuẩn bị code visualize, cài đặt 2 phiên bản thuật toán A*, Conflict-based search và viết báo cáo. |
 
 ## Các Agent
 

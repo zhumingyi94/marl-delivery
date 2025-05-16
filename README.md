@@ -16,6 +16,11 @@ Mô phỏng diễn ra trên bản đồ lưới với các quy tắc sau:
 - Các gói hàng có vị trí bắt đầu, vị trí đích và thời hạn
 - Các agent cần nhặt và giao gói hàng trước thời hạn
 
+## Notebook chạy trên Kaggle
+Hai notebook có thể dùng để chạy trên Kaggle ở trong folder `Kaggle`:
+- `marl-delivery-final.ipynb` (recommended): clone repo của nhóm về và chạy các map qua command line. Notebook gốc ở [tangha2005/marl-delivery-final](https://www.kaggle.com/code/tangha2005/marl-delivery-final)
+- `final.ipynb`: đặt code 3 file `agents`, `env.py`, `main.py` vào cùng 1 notebook và chạy. Notebook hiện tại đang chạy trên nhiều seed (100 seed) và lấy trung bình. Notebook gốc ở [tad161104/final](https://www.kaggle.com/code/tad161104/final)
+
 ## Thành Viên Nhóm
 
 ### Phân Công Công Việc

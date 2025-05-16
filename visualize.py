@@ -381,7 +381,7 @@ def visualize_delivery(map_file='map4.txt', num_agents=5, n_packages=10, max_ste
     print(f"Total time steps: {infos.get('total_time_steps', 'N/A')}")
     
     # Save animation to file
-    # visualizer.save_animation()
+    visualizer.save_animation()
     
     # Keep the plot window open
     plt.show()
@@ -396,7 +396,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_steps", type=int, default=100, help="Maximum number of steps per episode")
     parser.add_argument("--seed", type=int, default=10, help="Random seed for reproducibility")
     parser.add_argument("--max_time_steps", type=int, default=100, help="Maximum time steps for the environment")
-    parser.add_argument("--map", type=str, default="map4.txt", help="Map name")
+    parser.add_argument("--map", type=str, default="map5.txt", help="Map name")
 
     args = parser.parse_args()
     np.random.seed(args.seed)

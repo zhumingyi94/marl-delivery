@@ -155,7 +155,7 @@ def get_shortest_path(map):
     return list_path
 
 # Khởi tạo agents
-class AgentsVersion6:
+class AgentsVersion2:
     # Khởi tạo mặc định
     def __init__(self):
         self.state = None

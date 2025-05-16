@@ -121,7 +121,7 @@ def get_shortest_path(map):
                         list_path[(start, target)] = str_path[pos_i][pos_j]
     return list_path
 
-class AgentsVersion4:
+class AgentsVersion1:
     def __init__(self):
         self.n_robots = 0
         self.state = None

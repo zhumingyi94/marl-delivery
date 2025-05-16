@@ -5,7 +5,7 @@ Báo cáo có thể tìm thấy tại: https://drive.google.com/file/d/1xai7ZkXb
 
 ## Tổng Quan
 
-Dự án này triển khai môi trường Học Tăng cường Đa tác tử (MARL) cho mô phỏng giao hàng. Trong môi trường này, nhiều tác tử (robot) làm việc cùng nhau để thu thập và giao các gói hàng trong bản đồ dạng lưới đồng thời tránh các chướng ngại vật.
+Dự án này triển khai môi trường Đa tác tử (MARL) cho mô phỏng giao hàng. Trong môi trường này, nhiều tác tử (robot) làm việc cùng nhau để thu thập và giao các gói hàng trong bản đồ dạng lưới đồng thời tránh các chướng ngại vật.
 
 ## Môi Trường
 

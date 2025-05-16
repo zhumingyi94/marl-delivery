@@ -1,7 +1,7 @@
 # Bài Tập Lớn Mô Phỏng Giao Hàng Đa Tác Tử (MARL)
 Báo cáo có thể tìm thấy tại: https://drive.google.com/file/d/1xai7ZkXbP3oN0NY3XrKJeShyIcMTBXMZ/view?usp=sharing
 
-![Mô phỏng giao hàng](delivery_simulation.gif)
+![Mô phỏng giao hàng](delivery_simulation2.gif)
 
 ## Tổng Quan
 

@@ -170,7 +170,7 @@ class AgentsVersion6:
         self.count_repeat = [] # Lưu số lần vị trí đã được lặp lại
         self.last_move = [] # Lưu move của step trước
 
-        self.NUM_REPEAT = 2 # Số lần vị trí lặp lại cần để thực hiện random
+        self.NUM_REPEAT = 5 # Số lần vị trí lặp lại cần để thực hiện random
 
     # Khởi tạo thông tin dựa trên state được khởi tạo ban đầu
     def init_agents(self, state):
@@ -213,6 +213,7 @@ class AgentsVersion6:
                 start_package = (package[1], package[2])
                 target_package = (package[3], package[4])
 
+
                 len_path = alpha * len(self.get_action(pos_robot, start_package)) + beta * len(self.get_action(start_package, target_package))
                 if now_step + len_path > package[6]:
                     continue
@@ -225,6 +226,8 @@ class AgentsVersion6:
 
         flow_dict = nx.max_flow_min_cost(G, 's', 't')
 
+        list_package = []
+        list_robot = []
         result = {}
         for u, flows in flow_dict.items():
             # Bỏ qua các node không phải là robot
@@ -237,6 +240,40 @@ class AgentsVersion6:
                 if f>0 and v.startswith('package'):
                     package_id = int(v.split('_')[1])
                     result[robot_id] = package_id
+                    list_package.append(package_id)
+                    list_robot.append(robot_id)
+
+        # Nếu có robot chưa được gán với package nào (vì chê khi nhặt thì giao đã quá hạn)
+        for robot in robots:
+            robot_id = robot[0]
+            if robot_id in list_robot:
+                continue
+            for package in packages:
+                package_id = package[0]
+                if package_id in list_package:
+                    continue
+                pos_robot = (robot[1], robot[2])
+                start_package = (package[1], package[2])
+                target_package = (package[3], package[4])
+
+                len_path = alpha * len(self.get_action(pos_robot, start_package)) + beta * len(self.get_action(start_package, target_package))
+                G.add_edge(f"robot_{robot_id}", f"package_{package_id}", capacity=1, weight=len_path)
+
+        result = {}
+        for u, flows in flow_dict.items():
+            # Bỏ qua các node không phải là robot
+            # -> chỉ quan tâm cạnh nối từ robot->package
+            if not u.startswith('robot'):
+                continue
+
+            robot_id = int(u.split('_')[1])
+            for v, f in flows.items():
+                if f > 0 and v.startswith('package'):
+                    package_id = int(v.split('_')[1])
+                    result[robot_id] = package_id
+                    list_package.append(package_id)
+                    list_robot.append(robot_id)
+
         return result
 
     # Đưa ra action cho từng robot theo thứ tự dựa trên state nhận được
@@ -264,9 +301,13 @@ class AgentsVersion6:
             else:
                 self.count_repeat[i] = 1
             if self.count_repeat[i] >= self.NUM_REPEAT and self.last_move[i][0] != 'S' and self.last_move[i][1] != '1':
+                pos_robot = (robots[i][0], robots[i][1])
                 moves = ['L', 'R', 'U', 'D']
                 moves.remove(self.last_move[i][0])
                 move_action = random.choice(moves)
+                new_pos_robot = compute_valid_position(map, pos_robot, move_action)
+                if new_pos_robot == pos_robot:
+                    move_action = 'S'
                 actions.append((str(move_action), str(0)))
                 continue
 
@@ -331,7 +372,7 @@ class AgentsVersion6:
 
         print(compute_robots, compute_packages)
         optimal_assign = self.optimal_assign(state['time_step'], compute_robots, compute_packages)
-        print(optimal_assign)
+        print(f"Optimal assign: {optimal_assign}")
         for robot_id, package_id in optimal_assign.items():
             pos_robot = (robots[robot_id][0], robots[robot_id][1])
             package = self.packages[package_id]
@@ -340,6 +381,9 @@ class AgentsVersion6:
             move = 'S' if len(move_path) == 0 else move_path[0]
             pkg_act = 1 if len(move_path) <= 1 else 0
             actions[robot_id] = (str(move), str(pkg_act))
+
+        # Vì ưu tiên giao gói hàng chưa đến hạn, nên còn nhiều gói hàng hết deadline chưa được giao
+        # Sẽ để những con robot trạng thái S đi nhặt
 
         print(f"Start Actions : {actions}")
 
